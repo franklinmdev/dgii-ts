@@ -1,4 +1,5 @@
 import type { Contribuyente, NcfQueryResult, SoapClientOptions } from './types.js';
+import { DGII_SOAP_BASE_URL } from './endpoints.js';
 
 /**
  * Cliente SOAP tipado para el servicio WSMovilDGII de la DGII.
@@ -9,11 +10,14 @@ export class DgiiSoapClient {
   private readonly _options: Required<SoapClientOptions>;
 
   constructor(options?: SoapClientOptions) {
+    const baseUrl = options?.baseUrl ?? DGII_SOAP_BASE_URL;
+    if (!baseUrl.startsWith('https://')) {
+      throw new Error('baseUrl must use HTTPS');
+    }
+
     this._options = {
-      timeout: options?.timeout ?? 10000,
-      baseUrl:
-        options?.baseUrl ??
-        'https://dgii.gov.do/wsMovilDGII/WSMovilDGII.asmx',
+      timeout: Math.min(Math.max(options?.timeout ?? 10000, 1000), 120000),
+      baseUrl,
     };
   }
 

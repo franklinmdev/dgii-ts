@@ -3,7 +3,7 @@ import type { NcfValidationResult } from '../types/index.js';
 /**
  * Tipos de comprobantes fiscales NCF (serie B) según la DGII.
  */
-const NCF_TYPES: Record<string, string> = {
+const NCF_TYPES: Readonly<Record<string, string>> = /*#__PURE__*/ Object.freeze({
   '01': 'CREDITO_FISCAL',
   '02': 'CONSUMO',
   '03': 'NOTA_DE_DEBITO',
@@ -15,24 +15,25 @@ const NCF_TYPES: Record<string, string> = {
   '15': 'GUBERNAMENTAL',
   '16': 'EXPORTACIONES',
   '17': 'PAGOS_AL_EXTERIOR',
-};
+});
 
 /**
  * Nombres legibles de cada tipo de NCF.
  */
-export const NCF_TYPE_NAMES: Record<string, string> = {
-  '01': 'Factura de crédito fiscal',
-  '02': 'Factura de consumo',
-  '03': 'Nota de débito',
-  '04': 'Nota de crédito',
-  '11': 'Comprobante de compras',
-  '12': 'Registro único de ingresos',
-  '13': 'Comprobante para gastos menores',
-  '14': 'Comprobante para regímenes especiales',
-  '15': 'Comprobante gubernamental',
-  '16': 'Comprobante para exportaciones',
-  '17': 'Comprobante para pagos al exterior',
-};
+export const NCF_TYPE_NAMES: Readonly<Record<string, string>> =
+  /*#__PURE__*/ Object.freeze({
+    '01': 'Factura de crédito fiscal',
+    '02': 'Factura de consumo',
+    '03': 'Nota de débito',
+    '04': 'Nota de crédito',
+    '11': 'Comprobante de compras',
+    '12': 'Registro único de ingresos',
+    '13': 'Comprobante para gastos menores',
+    '14': 'Comprobante para regímenes especiales',
+    '15': 'Comprobante gubernamental',
+    '16': 'Comprobante para exportaciones',
+    '17': 'Comprobante para pagos al exterior',
+  });
 
 const NCF_PATTERN = /^B(\d{2})(\d{8})$/;
 
@@ -46,6 +47,8 @@ const NCF_PATTERN = /^B(\d{2})(\d{8})$/;
  * @returns Resultado con validez, tipo y serie
  */
 export function validateNcf(value: string): NcfValidationResult {
+  if (typeof value !== 'string') return { valid: false };
+
   const normalized = value.toUpperCase().trim();
   const match = NCF_PATTERN.exec(normalized);
 
