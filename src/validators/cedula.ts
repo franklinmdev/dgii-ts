@@ -1,5 +1,6 @@
 import type { ValidationResult } from '../types/index.js';
 import { stripNonDigits } from '../utils/index.js';
+import { CEDULA_WHITELIST } from './cedula-whitelist.js';
 
 /**
  * Valida una cédula de identidad dominicana.
@@ -11,7 +12,17 @@ import { stripNonDigits } from '../utils/index.js';
  * @returns Resultado con validez y formato XXX-XXXXXXX-X
  */
 export function validateCedula(value: string): ValidationResult {
+  if (typeof value !== 'string') return { valid: false };
+
   const digits = stripNonDigits(value);
+
+  // Whitelisted cedulas bypass all algorithmic checks
+  if (CEDULA_WHITELIST.has(digits)) {
+    const formatted = digits.length === 11
+      ? `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits[10]}`
+      : digits;
+    return { valid: true, formatted };
+  }
 
   if (digits.length !== 11) {
     return { valid: false };
