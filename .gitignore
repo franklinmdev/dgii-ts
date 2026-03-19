@@ -6,3 +6,16 @@ coverage/
 *.log
 .env
 .env.*
+
+# Claude Code (personal)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/instincts/
+
+# Chief (personal automation)
+.chief/
+
+# Other AI tools
+.aider*
+.cursor/
+.copilot/
