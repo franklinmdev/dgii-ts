@@ -6,7 +6,17 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/index.ts'],
+      exclude: [
+        'src/index.ts',
+        'src/validators/index.ts',
+        'src/soap/index.ts',
+        'src/bulk/index.ts',
+      ],
+      thresholds: {
+        branches: 90,
+        functions: 90,
+        lines: 90,
+      },
     },
   },
 });

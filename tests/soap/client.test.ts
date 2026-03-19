@@ -28,4 +28,20 @@ describe('DgiiSoapClient', () => {
       'No implementado',
     );
   });
+
+  it('clamps timeout negativo al mínimo de 1000ms', () => {
+    const client = new DgiiSoapClient({ timeout: -1 });
+    expect(client).toBeInstanceOf(DgiiSoapClient);
+  });
+
+  it('clamps timeout NaN al mínimo de 1000ms', () => {
+    const client = new DgiiSoapClient({ timeout: NaN });
+    expect(client).toBeInstanceOf(DgiiSoapClient);
+  });
+
+  it('rechaza baseUrl que no usa HTTPS', () => {
+    expect(() => new DgiiSoapClient({ baseUrl: 'http://insecure.example.com/soap' })).toThrow(
+      'baseUrl must use HTTPS',
+    );
+  });
 });

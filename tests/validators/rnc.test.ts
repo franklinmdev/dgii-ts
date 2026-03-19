@@ -69,6 +69,28 @@ describe('validateRnc', () => {
     it('rechaza todos ceros', () => {
       expect(validateRnc('000000000').valid).toBe(false);
     });
+
+    it('retorna { valid: false } para input no-string', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateRnc as any)(123)).toEqual({ valid: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateRnc as any)(null)).toEqual({ valid: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateRnc as any)(undefined)).toEqual({ valid: false });
+    });
+
+    it('rechaza RNC 000000002 (bug fix)', () => {
+      expect(validateRnc('000000002').valid).toBe(false);
+    });
+
+    it('rechaza RNC que empieza con 0', () => {
+      expect(validateRnc('012345678').valid).toBe(false);
+    });
+
+    it('valida RNCs reales conocidos de datos públicos DGII', () => {
+      expect(validateRnc('130692092').valid).toBe(true);
+      expect(validateRnc('101007151').valid).toBe(true);
+    });
   });
 
   describe('formato', () => {

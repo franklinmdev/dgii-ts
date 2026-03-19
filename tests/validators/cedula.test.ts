@@ -64,6 +64,30 @@ describe('validateCedula', () => {
     it('rechaza prefijo 000', () => {
       expect(validateCedula('00012345678').valid).toBe(false);
     });
+
+    it('retorna { valid: false } para input no-string', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateCedula as any)(123)).toEqual({ valid: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateCedula as any)(null)).toEqual({ valid: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateCedula as any)(undefined)).toEqual({ valid: false });
+    });
+
+    it('acepta separadores mixtos (espacios y puntos)', () => {
+      const result = validateCedula('001.1234567.3');
+      expect(result.valid).toBe(true);
+      expect(result.formatted).toBe('001-1234567-3');
+    });
+
+    it('rechaza strings numéricos muy largos', () => {
+      expect(validateCedula('0011234567300000').valid).toBe(false);
+    });
+
+    it('valida cuando caracteres no-dígito reducen a 11 dígitos válidos', () => {
+      const result = validateCedula('0-0-1-1-2-3-4-5-6-7-3');
+      expect(result.valid).toBe(true);
+    });
   });
 
   describe('formato', () => {

@@ -125,6 +125,15 @@ describe('validateNcf', () => {
     });
   });
 
+  describe('type guard', () => {
+    it('retorna { valid: false } para input no-string', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateNcf as any)(123)).toEqual({ valid: false });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((validateNcf as any)(null)).toEqual({ valid: false });
+    });
+  });
+
   describe('resultado', () => {
     it('retorna type y serie como undefined cuando es inválido', () => {
       const result = validateNcf('INVALIDO');
