@@ -1,0 +1,61 @@
+{
+  "name": "dgii-ts",
+  "version": "0.1.0",
+  "description": "Librería TypeScript para validación e integración con la DGII de República Dominicana — RNC, Cédula, NCF, e-NCF",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "dgii",
+    "rnc",
+    "cedula",
+    "ncf",
+    "ecf",
+    "dominican-republic",
+    "republica-dominicana",
+    "tax",
+    "impuestos",
+    "typescript"
+  ],
+  "author": "TheMVProgrammer <franklin0415@hotmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/franklinmdev/dgii-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/franklinmdev/dgii-ts/issues"
+  },
+  "homepage": "https://github.com/franklinmdev/dgii-ts#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.0.0"
+  }
+}

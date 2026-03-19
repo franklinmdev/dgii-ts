@@ -1,0 +1,11 @@
+src/
+tests/
+.github/
+.editorconfig
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+coverage/
+*.tsbuildinfo
+.env
+.env.*

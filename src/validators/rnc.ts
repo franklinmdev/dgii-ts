@@ -1,0 +1,47 @@
+import type { ValidationResult } from '../types/index.js';
+import { stripNonDigits } from '../utils/index.js';
+
+const WEIGHTS = [7, 9, 8, 6, 5, 4, 3, 2] as const;
+
+/**
+ * Valida un RNC (Registro Nacional de Contribuyentes) dominicano.
+ *
+ * El RNC tiene 9 dígitos y usa un algoritmo de dígito verificador
+ * basado en módulo 11 con pesos [7, 9, 8, 6, 5, 4, 3, 2].
+ *
+ * @param value - RNC a validar (con o sin guiones)
+ * @returns Resultado con validez y formato X-XX-XXXXX-X
+ */
+export function validateRnc(value: string): ValidationResult {
+  const digits = stripNonDigits(value);
+
+  if (digits.length !== 9) {
+    return { valid: false };
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 8; i++) {
+    sum += Number(digits[i]) * WEIGHTS[i]!;
+  }
+
+  const remainder = sum % 11;
+  let expectedCheckDigit: number;
+
+  if (remainder === 0) {
+    expectedCheckDigit = 2;
+  } else if (remainder === 1) {
+    expectedCheckDigit = 1;
+  } else {
+    expectedCheckDigit = 11 - remainder;
+  }
+
+  const actualCheckDigit = Number(digits[8]);
+
+  if (actualCheckDigit !== expectedCheckDigit) {
+    return { valid: false };
+  }
+
+  const formatted = `${digits[0]}-${digits[1]}${digits[2]}-${digits[3]}${digits[4]}${digits[5]}${digits[6]}${digits[7]}-${digits[8]}`;
+
+  return { valid: true, formatted };
+}
