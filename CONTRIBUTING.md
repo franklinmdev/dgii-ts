@@ -15,6 +15,7 @@ npm run build       # Compilar la librería / Build the library
 npm test            # Ejecutar tests / Run tests
 npm run test:watch  # Tests en modo watch / Watch mode
 npm run typecheck   # Verificar tipos / Type check
+npx vitest run --coverage  # Coverage report (mínimo 90%)
 ```
 
 ## Guía para pull requests / PR guidelines
@@ -25,6 +26,7 @@ npm run typecheck   # Verificar tipos / Type check
 - Asegúrate de que todos los tests pasen antes de enviar tu PR
 - Usa TypeScript estricto — nada de `any`
 - Incluye tests para cualquier funcionalidad nueva
+- Mantén la cobertura por encima de 90% (branches, functions, lines)
 
 ---
 
@@ -34,6 +36,7 @@ npm run typecheck   # Verificar tipos / Type check
 - Make sure all tests pass before submitting your PR
 - Use strict TypeScript — no `any`
 - Include tests for any new functionality
+- Keep coverage above 90% (branches, functions, lines)
 
 ## Reportar issues / Reporting issues
 

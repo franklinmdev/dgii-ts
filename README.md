@@ -1,6 +1,7 @@
 # dgii-ts
 
 [![npm version](https://img.shields.io/npm/v/dgii-ts.svg)](https://www.npmjs.com/package/dgii-ts)
+[![CI](https://github.com/franklinmdev/dgii-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/franklinmdev/dgii-ts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
 
@@ -32,7 +33,9 @@ resiliencia:
 
 Validación algorítmica de dígitos verificadores para RNC (9 dígitos), cédula
 (11 dígitos), NCF (serie B) y e-NCF (serie E). Sin dependencias de red, sin
-puntos de fallo externos.
+puntos de fallo externos. Incluye whitelists de 578 cédulas y 23 RNCs
+(fuente: [python-stdnum](https://github.com/arthurdejong/python-stdnum)) que
+pasan validación aunque no cumplan el algoritmo de dígito verificador.
 
 ### Cliente SOAP (WSMovilDGII)
 
@@ -97,7 +100,19 @@ const result = validateEcf('E310000000001');
 // { valid: true, type: 'CREDITO_FISCAL_ELECTRONICA', serie: 'E31' }
 ```
 
-### Consultar contribuyente (SOAP)
+### Importar solo validadores (tree-shaking)
+
+```typescript
+import { validateRnc } from 'dgii-ts/validators';
+```
+
+Los submódulos disponibles son `dgii-ts/validators`, `dgii-ts/soap` y
+`dgii-ts/bulk`.
+
+### Consultar contribuyente (SOAP) — *pendiente*
+
+> **Nota:** El cliente SOAP aún no está implementado. La interfaz está definida
+> y estará disponible en una futura versión.
 
 ```typescript
 import { DgiiSoapClient } from 'dgii-ts';
@@ -160,6 +175,10 @@ ideal para operaciones en lote donde necesitas buscar miles de RNC rápidamente.
 - [ ] Cliente SOAP WSMovilDGII
 - [ ] Importador DGII\_RNC.zip
 - [ ] Herramienta CLI
+
+## Seguridad
+
+Para reportar vulnerabilidades, consulta [SECURITY.md](./SECURITY.md).
 
 ## Contribuciones
 

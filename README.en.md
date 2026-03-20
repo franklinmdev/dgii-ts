@@ -1,6 +1,7 @@
 # dgii-ts
 
 [![npm version](https://img.shields.io/npm/v/dgii-ts.svg)](https://www.npmjs.com/package/dgii-ts)
+[![CI](https://github.com/franklinmdev/dgii-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/franklinmdev/dgii-ts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
 
@@ -30,7 +31,9 @@ at least three times, breaking every existing integration.
 
 Algorithmic check-digit validation for RNC (9 digits), Cedula (11 digits),
 NCF (B-series), and e-NCF (E-series). No network dependencies, no external
-points of failure.
+points of failure. Includes whitelists of 578 Cedulas and 23 RNCs
+(source: [python-stdnum](https://github.com/arthurdejong/python-stdnum))
+that pass validation despite failing the check-digit algorithm.
 
 ### SOAP client (WSMovilDGII)
 
@@ -95,7 +98,19 @@ const result = validateEcf('E310000000001');
 // { valid: true, type: 'CREDITO_FISCAL_ELECTRONICA', serie: 'E31' }
 ```
 
-### Look up a taxpayer (SOAP)
+### Import only validators (tree-shaking)
+
+```typescript
+import { validateRnc } from 'dgii-ts/validators';
+```
+
+Available submodules: `dgii-ts/validators`, `dgii-ts/soap`, and
+`dgii-ts/bulk`.
+
+### Look up a taxpayer (SOAP) — *coming soon*
+
+> **Note:** The SOAP client is not yet implemented. The interface is defined
+> and will be available in a future release.
 
 ```typescript
 import { DgiiSoapClient } from 'dgii-ts';
@@ -158,6 +173,10 @@ where you need to look up thousands of RNCs quickly.
 - [ ] SOAP client (WSMovilDGII)
 - [ ] Bulk data importer (DGII\_RNC.zip)
 - [ ] CLI tool
+
+## Security
+
+To report vulnerabilities, see [SECURITY.md](./SECURITY.md).
 
 ## Contributing
 
