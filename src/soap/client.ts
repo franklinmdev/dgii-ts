@@ -12,7 +12,7 @@ export class DgiiSoapClient {
   constructor(options?: SoapClientOptions) {
     const baseUrl = options?.baseUrl ?? DGII_SOAP_BASE_URL;
     if (!baseUrl.startsWith('https://')) {
-      throw new Error('baseUrl must use HTTPS');
+      throw new Error('baseUrl debe usar HTTPS');
     }
 
     this._options = {
@@ -27,8 +27,8 @@ export class DgiiSoapClient {
    * TODO: Implementar llamada SOAP a GetContribuyentes.
    */
   async getContribuyente(_rnc: string): Promise<Contribuyente> {
-    void this._options;
-    throw new Error('No implementado. Disponible en una futura versión.');
+    void this._options; // consumed when SOAP calls are implemented
+    throw new Error('getContribuyente: no implementado.');
   }
 
   /**
@@ -38,6 +38,6 @@ export class DgiiSoapClient {
    */
   async getNCF(_rnc: string, _ncf: string): Promise<NcfQueryResult> {
     void this._options;
-    throw new Error('No implementado. Disponible en una futura versión.');
+    throw new Error('getNCF: no implementado.');
   }
 }

@@ -6,5 +6,5 @@ import type { DownloadOptions } from './types.js';
  * TODO: Implementar descarga con node:https y extracción con node:zlib.
  */
 export async function downloadBulkFile(_options: DownloadOptions): Promise<string> {
-  throw new Error('No implementado. Disponible en una futura versión.');
+  throw new Error('downloadBulkFile: no implementado.');
 }

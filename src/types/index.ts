@@ -1,19 +1,16 @@
 /**
  * Resultado de validación para RNC y cédula.
  */
-export interface ValidationResult {
-  valid: boolean;
-  formatted?: string;
-}
+export type ValidationResult =
+  | { valid: true; formatted: string }
+  | { valid: false; formatted?: undefined };
 
 /**
  * Resultado de validación para NCF (serie B) y e-NCF (serie E).
  */
-export interface NcfValidationResult {
-  valid: boolean;
-  type?: string;
-  serie?: string;
-}
+export type NcfValidationResult =
+  | { valid: true; type: string; serie: string }
+  | { valid: false; type?: undefined; serie?: undefined };
 
 /**
  * Datos de un contribuyente registrado en la DGII.

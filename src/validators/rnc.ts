@@ -56,7 +56,7 @@ export function validateRnc(value: string): ValidationResult {
     return { valid: false };
   }
 
-  const formatted = `${digits[0]}-${digits[1]}${digits[2]}-${digits[3]}${digits[4]}${digits[5]}${digits[6]}${digits[7]}-${digits[8]}`;
+  const formatted = `${digits[0]}-${digits.slice(1, 3)}-${digits.slice(3, 8)}-${digits[8]}`;
 
   return { valid: true, formatted };
 }

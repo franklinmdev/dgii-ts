@@ -5,6 +5,6 @@ describe('downloadBulkFile', () => {
   it('lanza error de no implementado', async () => {
     await expect(
       downloadBulkFile({ outputDir: '/tmp' }),
-    ).rejects.toThrow('No implementado');
+    ).rejects.toThrow('downloadBulkFile: no implementado');
   });
 });

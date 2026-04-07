@@ -1,4 +1,3 @@
-// Validadores offline
 export {
   validateRnc,
   validateCedula,
@@ -8,13 +7,10 @@ export {
   ECF_TYPE_NAMES,
 } from './validators/index.js';
 
-// Cliente SOAP
 export { DgiiSoapClient, DGII_SOAP_BASE_URL, SOAP_ACTIONS } from './soap/index.js';
 
-// Datos masivos
 export { downloadBulkFile, parseBulkFile } from './bulk/index.js';
 
-// Tipos
 export type {
   ValidationResult,
   NcfValidationResult,

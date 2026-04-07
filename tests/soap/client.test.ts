@@ -18,14 +18,14 @@ describe('DgiiSoapClient', () => {
   it('getContribuyente lanza error de no implementado', async () => {
     const client = new DgiiSoapClient();
     await expect(client.getContribuyente('131098193')).rejects.toThrow(
-      'No implementado',
+      'getContribuyente: no implementado',
     );
   });
 
   it('getNCF lanza error de no implementado', async () => {
     const client = new DgiiSoapClient();
     await expect(client.getNCF('131098193', 'B0100000001')).rejects.toThrow(
-      'No implementado',
+      'getNCF: no implementado',
     );
   });
 
@@ -41,7 +41,7 @@ describe('DgiiSoapClient', () => {
 
   it('rechaza baseUrl que no usa HTTPS', () => {
     expect(() => new DgiiSoapClient({ baseUrl: 'http://insecure.example.com/soap' })).toThrow(
-      'baseUrl must use HTTPS',
+      'baseUrl debe usar HTTPS',
     );
   });
 });

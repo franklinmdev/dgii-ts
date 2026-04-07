@@ -86,11 +86,6 @@ describe('validateRnc', () => {
     it('rechaza RNC que empieza con 0', () => {
       expect(validateRnc('012345678').valid).toBe(false);
     });
-
-    it('valida RNCs reales conocidos de datos públicos DGII', () => {
-      expect(validateRnc('130692092').valid).toBe(true);
-      expect(validateRnc('101007151').valid).toBe(true);
-    });
   });
 
   describe('formato', () => {

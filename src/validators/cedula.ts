@@ -16,7 +16,6 @@ export function validateCedula(value: string): ValidationResult {
 
   const digits = stripNonDigits(value);
 
-  // Whitelisted cedulas bypass all algorithmic checks
   if (CEDULA_WHITELIST.has(digits)) {
     const formatted = digits.length === 11
       ? `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits[10]}`

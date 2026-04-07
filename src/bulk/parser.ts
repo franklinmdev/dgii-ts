@@ -8,5 +8,5 @@ import type { BulkContribuyente, ParseOptions } from './types.js';
 export async function parseBulkFile(
   _options: ParseOptions,
 ): Promise<BulkContribuyente[]> {
-  throw new Error('No implementado. Disponible en una futura versión.');
+  throw new Error('parseBulkFile: no implementado.');
 }
