@@ -19,11 +19,13 @@ basic RNC or NCF lookups. Dominican developers rely on fragile scrapers that
 parse ASP.NET WebForms pages with ViewState — and those pages have changed URLs
 at least three times, breaking every existing integration.
 
-**dgii-ts** solves this with a three-layer approach designed for resilience:
+**dgii-ts** solves this with a four-layer approach designed for resilience:
 
 1. **Offline validation** — never fails, zero network calls
-2. **SOAP client** — real-time queries against the WSMovilDGII service
-3. **Bulk data** — import DGII's daily bulk RNC file (DGII\_RNC.zip)
+2. **Web scraping** — real-time queries against DGII's ASP.NET pages
+3. **SOAP client** *(deprecated)* — WSMovilDGII wrapper, blocked by
+   DGII since January 2025
+4. **Bulk data** — import DGII's daily bulk RNC file (DGII\_RNC.zip)
 
 ## Features
 
@@ -35,11 +37,23 @@ points of failure. Includes whitelists of 578 Cedulas and 23 RNCs
 (source: [python-stdnum](https://github.com/arthurdejong/python-stdnum))
 that pass validation despite failing the check-digit algorithm.
 
-### SOAP client (WSMovilDGII)
+### Resilient client (DgiiClient)
 
-Typed wrapper around DGII's SOAP service for taxpayer lookups
-(`GetContribuyentes`) and fiscal receipt validation (`GetNCF`). Includes
-full TypeScript types for all responses.
+`DgiiClient` is the recommended entry point for real-time queries. It uses
+web scraping as its primary strategy with SOAP fallback, a circuit breaker
+to prevent cascading failures, and retry with exponential backoff.
+
+### Web scraping
+
+Queries DGII's ASP.NET pages by extracting ViewState tokens and parsing
+response HTML. This is the primary strategy since DGII blocked the SOAP
+endpoint in January 2025.
+
+### SOAP client (WSMovilDGII) — deprecated
+
+Typed wrapper around DGII's SOAP service. **Permanently blocked by DGII
+since January 2025.** Kept as an internal fallback but not recommended
+for direct use.
 
 ### Bulk data importer
 
@@ -104,20 +118,24 @@ const result = validateEcf('E310000000001');
 import { validateRnc } from 'dgii-ts/validators';
 ```
 
-Available submodules: `dgii-ts/validators`, `dgii-ts/soap`, and
-`dgii-ts/bulk`.
+Available submodules: `dgii-ts/validators`, `dgii-ts/client`,
+`dgii-ts/scraping`, `dgii-ts/soap`, `dgii-ts/bulk`, and `dgii-ts/errors`.
 
-### Look up a taxpayer (SOAP) — *coming soon*
-
-> **Note:** The SOAP client is not yet implemented. The interface is defined
-> and will be available in a future release.
+### Look up a taxpayer
 
 ```typescript
-import { DgiiSoapClient } from 'dgii-ts';
+import { DgiiClient } from 'dgii-ts/client';
 
-const client = new DgiiSoapClient();
+const client = new DgiiClient();
 const result = await client.getContribuyente('131098193');
 // { rnc: '131098193', nombre: '...', estado: '...', ... }
+```
+
+### Validate an NCF online
+
+```typescript
+const ncfResult = await client.getNCF('131098193', 'B0100000001');
+// { rnc: '131098193', ncf: 'B0100000001', estado: '...', ... }
 ```
 
 ## API reference
@@ -131,20 +149,36 @@ const result = await client.getContribuyente('131098193');
 | `validateNcf(value)` | Validates NCF format and type (B-series) |
 | `validateEcf(value)` | Validates e-NCF format and type (E-series) |
 
-### SOAP client
+### Resilient client
 
 | Class/Method | Description |
 | --- | --- |
-| `DgiiSoapClient` | Typed client for WSMovilDGII |
+| `DgiiClient` | Scraping + SOAP fallback, circuit breaker, retry |
 | `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
 | `client.getNCF(rnc, ncf)` | Validates a fiscal receipt against DGII |
+
+### Scraping
+
+| Class/Method | Description |
+| --- | --- |
+| `ScrapingClient` | Queries DGII's ASP.NET pages |
+| `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
+| `client.getNCF(rnc, ncf)` | Validates a fiscal receipt |
+
+### SOAP client (deprecated)
+
+| Class/Method | Description |
+| --- | --- |
+| `DgiiSoapClient` | WSMovilDGII client (blocked) |
+| `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
+| `client.getNCF(rnc, ncf)` | Validates a fiscal receipt |
 
 ### Bulk data
 
 | Class/Method | Description |
 | --- | --- |
-| `downloadBulkFile(path)` | Downloads DGII\_RNC.zip to the given directory |
-| `parseBulkFile(path)` | Parses the taxpayer TXT file |
+| `downloadBulkFile(options)` | Downloads DGII\_RNC.zip to the given directory |
+| `parseBulkFile(options)` | Parses the taxpayer TXT file |
 
 ## Architecture
 
@@ -155,8 +189,9 @@ const result = await client.getContribuyente('131098193');
 │  Layer 1: Offline validation                    │
 │  ✓ RNC/Cedula check-digit  ✓ NCF/e-NCF format  │
 ├─────────────────────────────────────────────────┤
-│  Layer 2: SOAP client (WSMovilDGII)             │
-│  ✓ Taxpayer lookup  ✓ NCF validation            │
+│  Layer 2: DgiiClient (resilient)                │
+│  ✓ Web scraping (primary)                       │
+│  ✓ SOAP fallback  ✓ Circuit breaker  ✓ Retry   │
 ├─────────────────────────────────────────────────┤
 │  Layer 3: Bulk data (DGII_RNC.zip)              │
 │  ✓ Daily download  ✓ TXT parsing                │
@@ -164,15 +199,18 @@ const result = await client.getContribuyente('131098193');
 ```
 
 **Layer 1** is instant and works offline. **Layer 2** provides real-time data
-for recently registered taxpayers. **Layer 3** is ideal for batch operations
-where you need to look up thousands of RNCs quickly.
+using web scraping as the primary strategy, with SOAP fallback, circuit
+breaker, and retry with exponential backoff. **Layer 3** is ideal for batch
+operations where you need to look up thousands of RNCs quickly.
 
 ## Project status
 
 - [x] Offline validation (RNC, Cedula, NCF, e-NCF)
-- [ ] SOAP client (WSMovilDGII)
-- [ ] Bulk data importer (DGII\_RNC.zip)
-- [ ] CLI tool
+- [x] Web scraping of DGII's ASP.NET pages
+- [x] SOAP client WSMovilDGII (deprecated — blocked by DGII)
+- [x] Resilient client with circuit breaker and retry
+- [x] Bulk data importer (download + parsing)
+- [x] Published on npm
 
 ## Security
 

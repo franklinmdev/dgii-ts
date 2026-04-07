@@ -20,12 +20,15 @@ dependen de scrapers frágiles que parsean páginas ASP.NET con ViewState — y
 esas páginas han cambiado de URL al menos tres veces, rompiendo cada integración
 existente.
 
-**dgii-ts** resuelve esto con un enfoque de tres capas diseñado para
+**dgii-ts** resuelve esto con un enfoque de cuatro capas diseñado para
 resiliencia:
 
 1. **Validación offline** — nunca falla, cero llamadas de red
-2. **Cliente SOAP** — consultas en tiempo real contra el servicio WSMovilDGII
-3. **Datos masivos** — importación del archivo diario DGII\_RNC.zip
+2. **Web scraping** — consultas en tiempo real contra las páginas
+   ASP.NET de la DGII
+3. **Cliente SOAP** *(deprecated)* — wrapper del servicio WSMovilDGII,
+   bloqueado por la DGII en enero 2025
+4. **Datos masivos** — importación del archivo diario DGII\_RNC.zip
 
 ## Características
 
@@ -37,11 +40,23 @@ puntos de fallo externos. Incluye whitelists de 578 cédulas y 23 RNCs
 (fuente: [python-stdnum](https://github.com/arthurdejong/python-stdnum)) que
 pasan validación aunque no cumplan el algoritmo de dígito verificador.
 
-### Cliente SOAP (WSMovilDGII)
+### Cliente resiliente (DgiiClient)
 
-Wrapper tipado alrededor del servicio SOAP de la DGII para consultas de
-contribuyentes (`GetContribuyentes`) y validación de comprobantes fiscales
-(`GetNCF`). Incluye tipos TypeScript completos para todas las respuestas.
+`DgiiClient` es el punto de entrada recomendado para consultas en tiempo real.
+Usa web scraping como estrategia primaria con fallback a SOAP, circuit breaker
+para evitar cascadas de errores, y retry con backoff exponencial.
+
+### Web scraping
+
+Consulta las páginas ASP.NET de la DGII extrayendo tokens ViewState y
+parseando el HTML de respuesta. Es la estrategia principal desde que la DGII
+bloqueó el endpoint SOAP en enero 2025.
+
+### Cliente SOAP (WSMovilDGII) — deprecated
+
+Wrapper tipado alrededor del servicio SOAP de la DGII. **Bloqueado
+permanentemente por la DGII en enero 2025.** Se mantiene como fallback
+interno pero no se recomienda su uso directo.
 
 ### Importador de datos masivos
 
@@ -106,20 +121,24 @@ const result = validateEcf('E310000000001');
 import { validateRnc } from 'dgii-ts/validators';
 ```
 
-Los submódulos disponibles son `dgii-ts/validators`, `dgii-ts/soap` y
-`dgii-ts/bulk`.
+Los submódulos disponibles son `dgii-ts/validators`, `dgii-ts/client`,
+`dgii-ts/scraping`, `dgii-ts/soap`, `dgii-ts/bulk` y `dgii-ts/errors`.
 
-### Consultar contribuyente (SOAP) — *pendiente*
-
-> **Nota:** El cliente SOAP aún no está implementado. La interfaz está definida
-> y estará disponible en una futura versión.
+### Consultar contribuyente
 
 ```typescript
-import { DgiiSoapClient } from 'dgii-ts';
+import { DgiiClient } from 'dgii-ts/client';
 
-const client = new DgiiSoapClient();
+const client = new DgiiClient();
 const result = await client.getContribuyente('131098193');
 // { rnc: '131098193', nombre: '...', estado: '...', ... }
+```
+
+### Validar NCF en línea
+
+```typescript
+const ncfResult = await client.getNCF('131098193', 'B0100000001');
+// { rnc: '131098193', ncf: 'B0100000001', estado: '...', ... }
 ```
 
 ## Referencia del API
@@ -133,20 +152,36 @@ const result = await client.getContribuyente('131098193');
 | `validateNcf(value)` | Valida formato y tipo de NCF (serie B) |
 | `validateEcf(value)` | Valida formato y tipo de e-NCF (serie E) |
 
-### Cliente SOAP
+### Cliente resiliente
 
 | Clase/Método | Descripción |
 | --- | --- |
-| `DgiiSoapClient` | Cliente tipado para WSMovilDGII |
+| `DgiiClient` | Cliente con scraping + SOAP fallback, circuit breaker y retry |
 | `client.getContribuyente(rnc)` | Consulta datos de un contribuyente por RNC |
 | `client.getNCF(rnc, ncf)` | Valida un comprobante fiscal contra la DGII |
+
+### Scraping
+
+| Clase/Método | Descripción |
+| --- | --- |
+| `ScrapingClient` | Consulta páginas ASP.NET de la DGII |
+| `client.getContribuyente(rnc)` | Consulta contribuyente por RNC |
+| `client.getNCF(rnc, ncf)` | Valida comprobante fiscal |
+
+### Cliente SOAP (deprecated)
+
+| Clase/Método | Descripción |
+| --- | --- |
+| `DgiiSoapClient` | Cliente para WSMovilDGII (bloqueado) |
+| `client.getContribuyente(rnc)` | Consulta contribuyente por RNC |
+| `client.getNCF(rnc, ncf)` | Valida comprobante fiscal |
 
 ### Datos masivos
 
 | Clase/Método | Descripción |
 | --- | --- |
-| `downloadBulkFile(path)` | Descarga DGII\_RNC.zip al directorio especificado |
-| `parseBulkFile(path)` | Parsea el archivo TXT de contribuyentes |
+| `downloadBulkFile(options)` | Descarga DGII\_RNC.zip |
+| `parseBulkFile(options)` | Parsea el archivo TXT |
 
 ## Arquitectura
 
@@ -157,8 +192,9 @@ const result = await client.getContribuyente('131098193');
 │  Capa 1: Validación offline                     │
 │  ✓ Check-digit RNC/Cédula  ✓ Formato NCF/e-NCF │
 ├─────────────────────────────────────────────────┤
-│  Capa 2: Cliente SOAP (WSMovilDGII)             │
-│  ✓ Consulta contribuyentes  ✓ Validación NCF   │
+│  Capa 2: DgiiClient (resiliente)                │
+│  ✓ Web scraping (primario)                      │
+│  ✓ SOAP fallback  ✓ Circuit breaker  ✓ Retry   │
 ├─────────────────────────────────────────────────┤
 │  Capa 3: Datos masivos (DGII_RNC.zip)           │
 │  ✓ Descarga diaria  ✓ Parseo TXT               │
@@ -166,15 +202,18 @@ const result = await client.getContribuyente('131098193');
 ```
 
 La **capa 1** es instantánea y funciona sin conexión. La **capa 2** ofrece
-datos en tiempo real para contribuyentes recién registrados. La **capa 3** es
+datos en tiempo real con web scraping como estrategia primaria, fallback a
+SOAP, circuit breaker y retry con backoff exponencial. La **capa 3** es
 ideal para operaciones en lote donde necesitas buscar miles de RNC rápidamente.
 
 ## Estado del proyecto
 
 - [x] Validación offline (RNC, cédula, NCF, e-NCF)
-- [ ] Cliente SOAP WSMovilDGII
-- [ ] Importador DGII\_RNC.zip
-- [ ] Herramienta CLI
+- [x] Web scraping de las páginas ASP.NET de la DGII
+- [x] Cliente SOAP WSMovilDGII (deprecated — bloqueado por la DGII)
+- [x] Cliente resiliente con circuit breaker y retry
+- [x] Importador DGII\_RNC.zip (descarga + parseo)
+- [x] Publicado en npm
 
 ## Seguridad
 
