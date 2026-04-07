@@ -10,7 +10,7 @@ describe('escapeXml', () => {
     expect(escapeXml('hello world')).toBe('hello world');
   });
 
-  it('maneja string vacio', () => {
+  it('maneja string vacío', () => {
     expect(escapeXml('')).toBe('');
   });
 });

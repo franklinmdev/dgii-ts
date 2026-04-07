@@ -6,7 +6,7 @@ export function stripNonDigits(value: string): string {
 }
 
 /**
- * Colapsa espacios multiples a uno solo y recorta extremos.
+ * Colapsa espacios múltiples a uno solo y recorta extremos.
  */
 export function collapseSpaces(value: string): string {
   return value.replace(/\s+/g, ' ').trim();

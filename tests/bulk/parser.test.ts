@@ -39,7 +39,7 @@ describe('parseBulkFile', () => {
     });
   });
 
-  it('ignora lineas vacias', async () => {
+  it('ignora líneas vacías', async () => {
     const content = [
       '131098193|EMPRESA UNO SRL|COMERCIAL|CAT|NORMAL|Activo|COMERCIO|2020-01-01|SD',
       '',
@@ -53,7 +53,7 @@ describe('parseBulkFile', () => {
     expect(results).toHaveLength(2);
   });
 
-  it('ignora lineas con campos insuficientes', async () => {
+  it('ignora líneas con campos insuficientes', async () => {
     const content = [
       '131098193|EMPRESA UNO SRL|COMERCIAL|CAT|NORMAL|Activo|COMERCIO|2020-01-01|SD',
       'only|three|fields',
@@ -89,7 +89,7 @@ describe('parseBulkFile', () => {
     expect(results[0]!.fechaConstitucion).toBe('');
   });
 
-  it('retorna array vacio para archivo vacio', async () => {
+  it('retorna array vacío para archivo vacío', async () => {
     const filePath = join(tempDir, 'empty.txt');
     await writeFile(filePath, '', 'utf-8');
 

@@ -1,5 +1,5 @@
 /**
- * Escapa caracteres especiales XML para prevenir inyeccion XML.
+ * Escapa caracteres especiales XML para prevenir inyección XML.
  * DEBE aplicarse a todo valor proporcionado por el usuario antes
  * de insertarlo en plantillas SOAP.
  */

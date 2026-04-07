@@ -5,11 +5,11 @@ import {
 } from '../errors/index.js';
 
 export interface RetryOptions {
-  /** Numero maximo de reintentos (por defecto: 2) */
+  /** Número máximo de reintentos (por defecto: 2) */
   maxRetries: number;
   /** Delay base en milisegundos (por defecto: 500) */
   baseDelayMs: number;
-  /** Delay maximo en milisegundos (por defecto: 10000) */
+  /** Delay máximo en milisegundos (por defecto: 10000) */
   maxDelayMs: number;
 }
 
@@ -40,10 +40,10 @@ export function isRetryableError(error: unknown): boolean {
 }
 
 /**
- * Ejecuta una funcion con reintentos y backoff exponencial
+ * Ejecuta una función con reintentos y backoff exponencial
  * con jitter completo.
  *
- * Formula: delay = random(0, min(maxDelay, baseDelay * 2^attempt))
+ * Fórmula: delay = random(0, min(maxDelay, baseDelay * 2^attempt))
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,

@@ -15,7 +15,7 @@ const DEFAULT_USER_AGENT =
   'Chrome/120.0.0.0 Safari/537.36';
 
 /**
- * Cliente que consulta la DGII via web scraping de la pagina
+ * Cliente que consulta la DGII vía web scraping de la página
  * de consultas ASP.NET.
  */
 export class ScrapingClient {
@@ -33,11 +33,11 @@ export class ScrapingClient {
   }
 
   /**
-   * Consulta datos de un contribuyente por RNC o cedula.
+   * Consulta datos de un contribuyente por RNC o cédula.
    */
   async getContribuyente(rnc: string): Promise<Contribuyente> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
-      throw new DgiiServiceError('El parametro rnc es requerido');
+      throw new DgiiServiceError('El parámetro rnc es requerido');
     }
 
     const tokens = await this._fetchTokens(this._rncUrl);
@@ -63,10 +63,10 @@ export class ScrapingClient {
    */
   async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
-      throw new DgiiServiceError('El parametro rnc es requerido');
+      throw new DgiiServiceError('El parámetro rnc es requerido');
     }
     if (typeof ncf !== 'string' || ncf.trim() === '') {
-      throw new DgiiServiceError('El parametro ncf es requerido');
+      throw new DgiiServiceError('El parámetro ncf es requerido');
     }
 
     const tokens = await this._fetchTokens(this._ncfUrl);
@@ -97,7 +97,7 @@ export class ScrapingClient {
 
     if (!response.ok) {
       throw new DgiiServiceError(
-        `La DGII respondio con HTTP ${response.status} al obtener la pagina`,
+        `La DGII respondió con HTTP ${response.status} al obtener la página`,
         { statusCode: response.status },
       );
     }
@@ -128,7 +128,7 @@ export class ScrapingClient {
 
     if (!response.ok) {
       throw new DgiiServiceError(
-        `La DGII respondio con HTTP ${response.status}`,
+        `La DGII respondió con HTTP ${response.status}`,
         { statusCode: response.status },
       );
     }

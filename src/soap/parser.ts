@@ -18,7 +18,7 @@ function sanitizeJson(raw: string): string {
 /**
  * Extrae y parsea la respuesta de GetContribuyentes.
  *
- * @throws {DgiiNotFoundError} si el RNC/cedula no existe
+ * @throws {DgiiNotFoundError} si el RNC/cédula no existe
  * @throws {DgiiServiceError} si la respuesta no tiene el formato esperado
  */
 export function parseContribuyenteResponse(
@@ -36,12 +36,12 @@ export function parseContribuyenteResponse(
 
   if (trimmed === '0' || trimmed === '') {
     throw new DgiiNotFoundError(
-      'RNC o cedula no encontrado en el registro de la DGII',
+      'RNC o cédula no encontrado en el registro de la DGII',
     );
   }
 
-  // DGII concatenates multiple results with @@@
-  // For single RNC lookup we take only the first result
+  // La DGII concatena múltiples resultados con @@@
+  // Para consulta individual tomamos solo el primer resultado
   const firstResult = trimmed.split('@@@')[0]!;
   const sanitized = sanitizeJson(firstResult);
 
@@ -50,11 +50,11 @@ export function parseContribuyenteResponse(
     parsed = JSON.parse(sanitized);
   } catch {
     throw new DgiiServiceError(
-      'Respuesta de la DGII no es JSON valido',
+      'Respuesta de la DGII no es JSON válido',
     );
   }
 
-  // Runtime shape validation (DGII response is untrusted data)
+  // Validación de forma en runtime (la respuesta de la DGII es data no confiable)
   if (
     typeof parsed !== 'object' ||
     parsed === null ||
@@ -91,8 +91,8 @@ export function parseNcfResponse(responseXml: string): NcfQueryResult {
   const trimmed = raw.trim();
 
   if (trimmed === '0' || trimmed === '') {
-    // GetNCF returns "0" when the combination is invalid
-    // This is NOT a not-found error -- it means the NCF is not valid
+    // GetNCF retorna "0" cuando la combinación es inválida
+    // Esto NO es un error de no-encontrado -- significa que el NCF no es válido
     return { valid: false, rnc: '', ncf: '', nombreComercial: undefined };
   }
 
@@ -103,7 +103,7 @@ export function parseNcfResponse(responseXml: string): NcfQueryResult {
     parsed = JSON.parse(sanitized);
   } catch {
     throw new DgiiServiceError(
-      'Respuesta de la DGII no es JSON valido',
+      'Respuesta de la DGII no es JSON válido',
     );
   }
 

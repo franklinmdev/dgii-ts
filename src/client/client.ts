@@ -14,7 +14,7 @@ import {
  * Cliente resiliente para consultas a la DGII.
  *
  * Usa web scraping como estrategia principal y SOAP como
- * fallback (con circuit breaker y reintentos automaticos).
+ * fallback (con circuit breaker y reintentos automáticos).
  */
 export class DgiiClient {
   private readonly _scraping: ScrapingClient;
@@ -50,7 +50,7 @@ export class DgiiClient {
   }
 
   /**
-   * Consulta datos de un contribuyente por RNC o cedula.
+   * Consulta datos de un contribuyente por RNC o cédula.
    */
   async getContribuyente(rnc: string): Promise<Contribuyente> {
     return this._executeWithFallback(
@@ -103,7 +103,7 @@ export class DgiiClient {
 
     throw new AllStrategiesFailedError(
       `Todas las estrategias de consulta fallaron. ` +
-      `Ultimo error: ${errors[errors.length - 1]?.message ?? 'desconocido'}`,
+      `Último error: ${errors[errors.length - 1]?.message ?? 'desconocido'}`,
       errors,
     );
   }

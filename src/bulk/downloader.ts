@@ -25,13 +25,13 @@ export async function downloadBulkFile(
       if ([301, 302, 307, 308].includes(status)) {
         const redirectUrl = response.headers['location'];
         if (redirectUrl) {
-          // Follow one redirect (DGII sometimes redirects HTTP->HTTPS)
-          response.resume(); // drain the current response
+          // Seguir un redirect (la DGII a veces redirige HTTP->HTTPS)
+          response.resume(); // drenar la respuesta actual
           const req2 = get(redirectUrl, (res2) => {
             handleResponse(res2, destPath, resolve, reject);
           });
           req2.on('error', (err) => reject(
-            new Error('Error de conexion al descargar archivo masivo', {
+            new Error('Error de conexión al descargar archivo masivo', {
               cause: err,
             }),
           ));
@@ -42,12 +42,12 @@ export async function downloadBulkFile(
     });
 
     req.on('error', (err) => reject(
-      new Error('Error de conexion al descargar archivo masivo', {
+      new Error('Error de conexión al descargar archivo masivo', {
         cause: err,
       }),
     ));
 
-    // Timeout
+    // Tiempo de espera
     req.setTimeout(timeout, () => {
       req.destroy();
       reject(new Error(
@@ -66,7 +66,7 @@ function handleResponse(
   if (response.statusCode !== 200) {
     response.resume();
     reject(new Error(
-      `La DGII respondio con HTTP ${response.statusCode ?? 'desconocido'} ` +
+      `La DGII respondió con HTTP ${response.statusCode ?? 'desconocido'} ` +
       'al descargar el archivo masivo',
     ));
     return;

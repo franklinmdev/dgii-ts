@@ -56,12 +56,12 @@ describe('DgiiSoapClient', () => {
     expect(client).toBeInstanceOf(DgiiSoapClient);
   });
 
-  it('clamps timeout negativo al minimo de 1000ms', () => {
+  it('clamps timeout negativo al mínimo de 1000ms', () => {
     const client = new DgiiSoapClient({ timeout: -1 });
     expect(client).toBeInstanceOf(DgiiSoapClient);
   });
 
-  it('clamps timeout NaN al minimo de 1000ms', () => {
+  it('clamps timeout NaN al mínimo de 1000ms', () => {
     const client = new DgiiSoapClient({ timeout: NaN });
     expect(client).toBeInstanceOf(DgiiSoapClient);
   });
@@ -74,7 +74,7 @@ describe('DgiiSoapClient', () => {
 
   // --- getContribuyente tests ---
 
-  it('retorna contribuyente para RNC valido', async () => {
+  it('retorna contribuyente para RNC válido', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(
         wrapInSoap('GetContribuyentes', MOCK_CONTRIBUYENTE_JSON),
@@ -216,7 +216,7 @@ describe('DgiiSoapClient', () => {
     expect(body).not.toContain('<script>');
   });
 
-  it('lanza DgiiServiceError para input vacio', async () => {
+  it('lanza DgiiServiceError para input vacío', async () => {
     const client = new DgiiSoapClient();
     await expect(client.getContribuyente('')).rejects.toThrow(
       DgiiServiceError,
@@ -225,7 +225,7 @@ describe('DgiiSoapClient', () => {
 
   // --- getNCF tests ---
 
-  it('retorna valid true para NCF valido', async () => {
+  it('retorna valid true para NCF válido', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(wrapInSoap('GetNCF', MOCK_NCF_JSON), { status: 200 }),
     );
@@ -245,14 +245,14 @@ describe('DgiiSoapClient', () => {
     expect(result.valid).toBe(false);
   });
 
-  it('lanza DgiiServiceError para rnc vacio en getNCF', async () => {
+  it('lanza DgiiServiceError para rnc vacío en getNCF', async () => {
     const client = new DgiiSoapClient();
     await expect(client.getNCF('', 'B0100000001')).rejects.toThrow(
       DgiiServiceError,
     );
   });
 
-  it('lanza DgiiServiceError para ncf vacio en getNCF', async () => {
+  it('lanza DgiiServiceError para ncf vacío en getNCF', async () => {
     const client = new DgiiSoapClient();
     await expect(client.getNCF('131098193', '')).rejects.toThrow(
       DgiiServiceError,

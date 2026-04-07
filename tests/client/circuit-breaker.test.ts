@@ -16,14 +16,14 @@ describe('ConsecutiveBreaker', () => {
     expect(breaker.state).toBe('CLOSED');
   });
 
-  it('permanece CLOSED mientras haya exitos', async () => {
+  it('permanece CLOSED mientras haya éxitos', async () => {
     const breaker = new ConsecutiveBreaker({ failureThreshold: 3 });
     await breaker.execute(() => Promise.resolve('ok'));
     await breaker.execute(() => Promise.resolve('ok'));
     expect(breaker.state).toBe('CLOSED');
   });
 
-  it('se abre despues de failureThreshold fallos consecutivos', async () => {
+  it('se abre después de failureThreshold fallos consecutivos', async () => {
     const breaker = new ConsecutiveBreaker({ failureThreshold: 3 });
 
     for (let i = 0; i < 3; i++) {
@@ -34,7 +34,7 @@ describe('ConsecutiveBreaker', () => {
     expect(breaker.state).toBe('OPEN');
   });
 
-  it('rechaza inmediatamente cuando esta OPEN', async () => {
+  it('rechaza inmediatamente cuando está OPEN', async () => {
     const breaker = new ConsecutiveBreaker({ failureThreshold: 1 });
 
     await breaker.execute(() => Promise.reject(new Error('fallo')))
@@ -45,7 +45,7 @@ describe('ConsecutiveBreaker', () => {
     ).rejects.toThrow(DgiiServiceError);
   });
 
-  it('transiciona a HALF_OPEN despues de recoveryTimeoutMs', async () => {
+  it('transiciona a HALF_OPEN después de recoveryTimeoutMs', async () => {
     const breaker = new ConsecutiveBreaker({
       failureThreshold: 1,
       recoveryTimeoutMs: 5000,
@@ -60,7 +60,7 @@ describe('ConsecutiveBreaker', () => {
     expect(breaker.state).toBe('HALF_OPEN');
   });
 
-  it('cierra despues de successThreshold exitos en HALF_OPEN', async () => {
+  it('cierra después de successThreshold éxitos en HALF_OPEN', async () => {
     const breaker = new ConsecutiveBreaker({
       failureThreshold: 1,
       recoveryTimeoutMs: 1000,
@@ -75,7 +75,7 @@ describe('ConsecutiveBreaker', () => {
     vi.advanceTimersByTime(1000);
     expect(breaker.state).toBe('HALF_OPEN');
 
-    // Dos exitos para cerrar
+    // Dos éxitos para cerrar
     await breaker.execute(() => Promise.resolve('ok'));
     await breaker.execute(() => Promise.resolve('ok'));
 
@@ -115,7 +115,7 @@ describe('ConsecutiveBreaker', () => {
     expect(breaker.state).toBe('CLOSED');
   });
 
-  it('un exito en CLOSED resetea el contador de fallos', async () => {
+  it('un éxito en CLOSED resetea el contador de fallos', async () => {
     const breaker = new ConsecutiveBreaker({ failureThreshold: 3 });
 
     // 2 fallos
@@ -124,10 +124,10 @@ describe('ConsecutiveBreaker', () => {
     await breaker.execute(() => Promise.reject(new Error('2')))
       .catch(() => { /* ignorar */ });
 
-    // 1 exito resetea el contador
+    // 1 éxito resetea el contador
     await breaker.execute(() => Promise.resolve('ok'));
 
-    // 2 fallos mas -- todavia no llega al threshold de 3
+    // 2 fallos más -- todavía no llega al threshold de 3
     await breaker.execute(() => Promise.reject(new Error('3')))
       .catch(() => { /* ignorar */ });
     await breaker.execute(() => Promise.reject(new Error('4')))

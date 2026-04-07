@@ -83,7 +83,7 @@ describe('parseContribuyenteResponse', () => {
     expect(result.estado).toBe('ACTIVO');
   });
 
-  it('lanza DgiiServiceError para JSON invalido', () => {
+  it('lanza DgiiServiceError para JSON inválido', () => {
     expect(() =>
       parseContribuyenteResponse(
         wrapInSoap('GetContribuyentes', '{not valid json'),
@@ -98,7 +98,7 @@ describe('parseContribuyenteResponse', () => {
     ).toThrow(DgiiServiceError);
   });
 
-  it('maneja campos faltantes con fallback a string vacio', () => {
+  it('maneja campos faltantes con fallback a string vacío', () => {
     const json = JSON.stringify({
       RGE_RUC: '123',
     });
@@ -155,7 +155,7 @@ describe('parseNcfResponse', () => {
     ).toThrow(DgiiServiceError);
   });
 
-  it('lanza DgiiServiceError para JSON invalido', () => {
+  it('lanza DgiiServiceError para JSON inválido', () => {
     expect(() =>
       parseNcfResponse(wrapInSoap('GetNCF', '{invalid')),
     ).toThrow(DgiiServiceError);
@@ -167,7 +167,7 @@ describe('parseNcfResponse', () => {
     ).toThrow(DgiiServiceError);
   });
 
-  it('retorna valid false para respuesta vacia', () => {
+  it('retorna valid false para respuesta vacía', () => {
     const result = parseNcfResponse(wrapInSoap('GetNCF', '  '));
     expect(result.valid).toBe(false);
   });

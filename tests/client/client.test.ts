@@ -138,7 +138,7 @@ describe('DgiiClient', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('getNCF funciona via scraping', async () => {
+  it('getNCF funciona vía scraping', async () => {
     const NCF_PAGE =
       '<html><body>' +
       '<input type="hidden" name="__VIEWSTATE" value="VS" />' +
@@ -179,7 +179,7 @@ describe('DgiiClient', () => {
     expect(client).toBeInstanceOf(DgiiClient);
   });
 
-  it('propaga DgiiNotFoundError desde SOAP sin iterar mas', async () => {
+  it('propaga DgiiNotFoundError desde SOAP sin iterar más', async () => {
     let callCount = 0;
     global.fetch = vi.fn().mockImplementation(() => {
       callCount++;

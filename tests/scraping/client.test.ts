@@ -53,12 +53,12 @@ describe('ScrapingClient', () => {
     expect(client).toBeInstanceOf(ScrapingClient);
   });
 
-  it('clamps timeout al minimo de 1000ms', () => {
+  it('clamps timeout al mínimo de 1000ms', () => {
     const client = new ScrapingClient({ timeout: 100 });
     expect(client).toBeInstanceOf(ScrapingClient);
   });
 
-  it('retorna contribuyente para RNC valido', async () => {
+  it('retorna contribuyente para RNC válido', async () => {
     let callCount = 0;
     global.fetch = vi.fn().mockImplementation(() => {
       callCount++;
@@ -121,7 +121,7 @@ describe('ScrapingClient', () => {
     );
   });
 
-  it('lanza DgiiServiceError para input vacio', async () => {
+  it('lanza DgiiServiceError para input vacío', async () => {
     const client = new ScrapingClient();
     await expect(client.getContribuyente('')).rejects.toThrow(
       DgiiServiceError,
@@ -193,14 +193,14 @@ describe('ScrapingClient', () => {
     );
   });
 
-  it('getNCF lanza DgiiServiceError para rnc vacio', async () => {
+  it('getNCF lanza DgiiServiceError para rnc vacío', async () => {
     const client = new ScrapingClient();
     await expect(client.getNCF('', 'B0100000001')).rejects.toThrow(
       DgiiServiceError,
     );
   });
 
-  it('getNCF lanza DgiiServiceError para ncf vacio', async () => {
+  it('getNCF lanza DgiiServiceError para ncf vacío', async () => {
     const client = new ScrapingClient();
     await expect(client.getNCF('131098193', '')).rejects.toThrow(
       DgiiServiceError,

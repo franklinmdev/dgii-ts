@@ -5,7 +5,7 @@ export interface CircuitBreakerOptions {
   failureThreshold: number;
   /** Tiempo en ms antes de probar de nuevo (por defecto: 60000) */
   recoveryTimeoutMs: number;
-  /** Exitos consecutivos en HALF_OPEN para cerrar (por defecto: 2) */
+  /** Éxitos consecutivos en HALF_OPEN para cerrar (por defecto: 2) */
   successThreshold: number;
 }
 
@@ -21,10 +21,10 @@ export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 /**
  * Circuit breaker basado en fallos consecutivos.
  *
- * - CLOSED: operacion normal, se cuentan fallos consecutivos
+ * - CLOSED: operación normal, se cuentan fallos consecutivos
  * - OPEN: rechaza inmediatamente, espera recoveryTimeoutMs
- * - HALF_OPEN: permite llamadas de prueba, cierra despues
- *   de successThreshold exitos consecutivos
+ * - HALF_OPEN: permite llamadas de prueba, cierra después
+ *   de successThreshold éxitos consecutivos
  */
 export class ConsecutiveBreaker {
   private _state: CircuitState = 'CLOSED';

@@ -37,13 +37,13 @@ describe('isRetryableError', () => {
     expect(isRetryableError(new DgiiNotFoundError('no'))).toBe(false);
   });
 
-  it('Error generico no es reintentable', () => {
+  it('Error genérico no es reintentable', () => {
     expect(isRetryableError(new Error('generic'))).toBe(false);
   });
 });
 
 describe('withRetry', () => {
-  it('retorna el resultado si la primera llamada tiene exito', async () => {
+  it('retorna el resultado si la primera llamada tiene éxito', async () => {
     const fn = vi.fn().mockResolvedValue('ok');
     const result = await withRetry(fn, {
       maxRetries: 2,
@@ -54,7 +54,7 @@ describe('withRetry', () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it('reintenta en DgiiConnectionError y tiene exito', async () => {
+  it('reintenta en DgiiConnectionError y tiene éxito', async () => {
     const fn = vi
       .fn()
       .mockRejectedValueOnce(new DgiiConnectionError('fallo'))
@@ -69,7 +69,7 @@ describe('withRetry', () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 
-  it('agota reintentos y lanza el ultimo error', async () => {
+  it('agota reintentos y lanza el último error', async () => {
     const fn = vi.fn().mockRejectedValue(
       new DgiiConnectionError('siempre falla'),
     );

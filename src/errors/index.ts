@@ -12,7 +12,7 @@ export class DgiiError extends Error {
 }
 
 /**
- * Error de conexion: timeout, DNS, red caida, TLS.
+ * Error de conexión: timeout, DNS, red caída, TLS.
  */
 export class DgiiConnectionError extends DgiiError {
   constructor(message: string, options?: ErrorOptions) {
@@ -22,9 +22,9 @@ export class DgiiConnectionError extends DgiiError {
 }
 
 /**
- * RNC/cedula o NCF no encontrado en el registro de la DGII.
+ * RNC/cédula o NCF no encontrado en el registro de la DGII.
  * Esto NO es un error de infraestructura -- es un resultado
- * valido de negocio.
+ * válido de negocio.
  */
 export class DgiiNotFoundError extends DgiiError {
   constructor(message: string) {

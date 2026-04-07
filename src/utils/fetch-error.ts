@@ -25,7 +25,7 @@ export function wrapFetchError(
     );
   }
   return new DgiiConnectionError(
-    'Error de conexion con el servicio de la DGII',
+    'Error de conexión con el servicio de la DGII',
     { cause: error },
   );
 }

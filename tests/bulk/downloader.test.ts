@@ -89,7 +89,7 @@ describe('downloadBulkFile', () => {
     expect(mockReq.setTimeout).toHaveBeenCalledWith(60000, expect.any(Function));
   });
 
-  it('clamps timeout al minimo de 5s', async () => {
+  it('clamps timeout al mínimo de 5s', async () => {
     const mockReq = createMockRequest();
     const mockRes = createMockResponse(200, 'data');
 
@@ -103,7 +103,7 @@ describe('downloadBulkFile', () => {
     expect(mockReq.setTimeout).toHaveBeenCalledWith(5000, expect.any(Function));
   });
 
-  it('lanza error para fallo de conexion', async () => {
+  it('lanza error para fallo de conexión', async () => {
     const mockReq = createMockRequest();
 
     mockedGet.mockImplementation((_url, _callback) => {
@@ -116,7 +116,7 @@ describe('downloadBulkFile', () => {
 
     await expect(
       downloadBulkFile({ outputDir: tempDir }),
-    ).rejects.toThrow('Error de conexion al descargar archivo masivo');
+    ).rejects.toThrow('Error de conexión al descargar archivo masivo');
   });
 
   it('sigue un redirect y descarga exitosamente', async () => {
@@ -162,7 +162,7 @@ describe('downloadBulkFile', () => {
     expect(mockReq.destroy).toHaveBeenCalled();
   });
 
-  it('lanza error de conexion en redirect', async () => {
+  it('lanza error de conexión en redirect', async () => {
     const mockReq = createMockRequest();
     const redirectRes = createMockResponse(302);
     (redirectRes as unknown as Record<string, unknown>).headers = {
@@ -188,7 +188,7 @@ describe('downloadBulkFile', () => {
 
     await expect(
       downloadBulkFile({ outputDir: tempDir }),
-    ).rejects.toThrow('Error de conexion al descargar archivo masivo');
+    ).rejects.toThrow('Error de conexión al descargar archivo masivo');
   });
 
   it('maneja respuesta sin statusCode', async () => {

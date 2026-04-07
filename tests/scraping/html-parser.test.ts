@@ -51,7 +51,7 @@ function buildNotFoundHtml(): string {
 }
 
 describe('extractViewStateTokens', () => {
-  it('extrae tokens de HTML valido', () => {
+  it('extrae tokens de HTML válido', () => {
     const html = buildPageHtml(MOCK_VIEWSTATE, MOCK_EVENT_VALIDATION);
     const tokens = extractViewStateTokens(html);
     expect(tokens.viewState).toBe(MOCK_VIEWSTATE);
@@ -227,7 +227,7 @@ describe('parseContribuyenteHtml', () => {
     expect(result.actividadEconomica).toBe('COMERCIO');
   });
 
-  it('retorna campos vacios si no hay match en tabla', () => {
+  it('retorna campos vacíos si no hay match en tabla', () => {
     const html =
       '<html><body>' +
       '<span id="cphMain_lblInformacion"></span>' +
@@ -242,7 +242,7 @@ describe('parseContribuyenteHtml', () => {
 });
 
 describe('parseNcfHtml', () => {
-  it('retorna valid false para NCF no valido', () => {
+  it('retorna valid false para NCF no válido', () => {
     const html =
       '<html><body>' +
       '<span id="cphMain_lblInformacion">El NCF digitado no es v&#225;lido.</span>' +
@@ -293,7 +293,7 @@ describe('parseNcfHtml', () => {
     expect(result.valid).toBe(false);
   });
 
-  it('retorna campos vacios cuando labels no coinciden en NCF', () => {
+  it('retorna campos vacíos cuando labels no coinciden en NCF', () => {
     const html =
       '<html><body>' +
       '<span id="cphMain_lblInformacion"></span>' +

@@ -48,26 +48,26 @@ export class DgiiSoapClient {
       throw wrapFetchError(error, timeout);
     }
 
-    // Defense against oversized responses (max 1 MB).
-    // Check Content-Length BEFORE reading the body into memory.
+    // Defensa contra respuestas sobredimensionadas (max 1 MB).
+    // Verificar Content-Length ANTES de leer el body en memoria.
     const contentLength = response.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > 1_048_576) {
       throw new DgiiServiceError(
-        'Respuesta de la DGII excede el tamano maximo permitido',
+        'Respuesta de la DGII excede el tamaño máximo permitido',
       );
     }
 
     if (response.status === 403) {
       throw new DgiiServiceError(
         'Acceso denegado por la DGII (HTTP 403). '
-        + 'El servicio puede estar restringido por ubicacion geografica.',
+        + 'El servicio puede estar restringido por ubicación geográfica.',
         { statusCode: 403 },
       );
     }
 
     if (!response.ok) {
       throw new DgiiServiceError(
-        `El servicio de la DGII respondio con HTTP ${response.status}`,
+        `El servicio de la DGII respondió con HTTP ${response.status}`,
         { statusCode: response.status },
       );
     }
@@ -76,11 +76,11 @@ export class DgiiSoapClient {
   }
 
   /**
-   * Consulta datos de un contribuyente por RNC o cedula.
+   * Consulta datos de un contribuyente por RNC o cédula.
    */
   async getContribuyente(rnc: string): Promise<Contribuyente> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
-      throw new DgiiServiceError('El parametro rnc es requerido');
+      throw new DgiiServiceError('El parámetro rnc es requerido');
     }
 
     const envelope = buildGetContribuyentesEnvelope(rnc.trim());
@@ -97,10 +97,10 @@ export class DgiiSoapClient {
    */
   async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
-      throw new DgiiServiceError('El parametro rnc es requerido');
+      throw new DgiiServiceError('El parámetro rnc es requerido');
     }
     if (typeof ncf !== 'string' || ncf.trim() === '') {
-      throw new DgiiServiceError('El parametro ncf es requerido');
+      throw new DgiiServiceError('El parámetro ncf es requerido');
     }
 
     const envelope = buildGetNcfEnvelope(rnc.trim(), ncf.trim());

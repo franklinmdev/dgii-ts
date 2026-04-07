@@ -3,7 +3,7 @@ import { DgiiNotFoundError, DgiiServiceError } from '../errors/index.js';
 import { collapseSpaces, stripNonDigits } from '../utils/index.js';
 
 /**
- * Resultado de la extraccion de tokens ViewState de una pagina
+ * Resultado de la extracción de tokens ViewState de una página
  * ASP.NET WebForms.
  */
 export interface ViewStateTokens {
@@ -14,7 +14,7 @@ export interface ViewStateTokens {
 
 /**
  * Extrae los tokens __VIEWSTATE, __VIEWSTATEGENERATOR y
- * __EVENTVALIDATION del HTML de una pagina ASP.NET.
+ * __EVENTVALIDATION del HTML de una página ASP.NET.
  */
 export function extractViewStateTokens(html: string): ViewStateTokens {
   const viewState = extractInputValue(html, '__VIEWSTATE');
@@ -25,7 +25,7 @@ export function extractViewStateTokens(html: string): ViewStateTokens {
 
   if (!viewState || !eventValidation) {
     throw new DgiiServiceError(
-      'No se encontraron tokens ViewState en la pagina de la DGII',
+      'No se encontraron tokens ViewState en la página de la DGII',
     );
   }
 
@@ -48,7 +48,7 @@ export function parseContribuyenteHtml(html: string): Contribuyente {
       const infoBlock = html.slice(infoStart, infoEnd);
       if (infoBlock.includes('no se encuentra')) {
         throw new DgiiNotFoundError(
-          'RNC o cedula no encontrado en el registro de la DGII',
+          'RNC o cédula no encontrado en el registro de la DGII',
         );
       }
     }
@@ -114,7 +114,7 @@ export function parseContribuyenteHtml(html: string): Contribuyente {
  * Parsea el HTML de respuesta de la consulta NCF.
  */
 export function parseNcfHtml(html: string): NcfQueryResult {
-  // Detectar mensajes de error o "no valido"
+  // Detectar mensajes de error o "no válido"
   const infoStart = html.indexOf('cphMain_lblInformacion');
   if (infoStart !== -1) {
     const infoEnd = html.indexOf('</span>', infoStart);
@@ -138,7 +138,7 @@ export function parseNcfHtml(html: string): NcfQueryResult {
     tableStart = html.indexOf(altTableId);
   }
   if (tableStart === -1) {
-    // Sin tabla de resultados = NCF no valido
+    // Sin tabla de resultados = NCF no válido
     return { valid: false, rnc: '', ncf: '', nombreComercial: undefined };
   }
 
@@ -171,19 +171,19 @@ export function parseNcfHtml(html: string): NcfQueryResult {
   };
 }
 
-// --- Internal helpers ---
+// --- Helpers internos ---
 
 function extractInputValue(
   html: string,
   name: string,
 ): string {
-  // Try id= first, then name= as fallback
+  // Intentar por id= primero, luego name= como fallback
   let idx = html.indexOf(`id="${name}"`);
   if (idx === -1) {
     idx = html.indexOf(`name="${name}"`);
   }
   if (idx === -1) return '';
-  // Find the enclosing <input> tag
+  // Encontrar el tag <input> que lo contiene
   const tagStart = html.lastIndexOf('<', idx);
   if (tagStart === -1) return '';
   const tagEnd = html.indexOf('>', idx);
@@ -193,7 +193,7 @@ function extractInputValue(
   return valueMatch?.[1] ?? '';
 }
 
-// Patterns hoisted to module level to avoid recompilation per call
+// Patrones elevados a nivel de módulo para evitar recompilación por llamada
 const BOLD_STYLE_PATTERN =
   /<td[^>]*style="font-weight:bold;"[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>/gi;
 const BOLD_TAG_PATTERN =

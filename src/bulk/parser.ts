@@ -24,8 +24,8 @@ export async function parseBulkFile(
 
     const fields = line.split('|');
 
-    // Require at least the first 7 fields (some rows may have
-    // fewer columns at the end)
+    // Requerir al menos los primeros 7 campos (algunas filas pueden
+    // tener menos columnas al final)
     if (fields.length < 7) continue;
 
     results.push({
