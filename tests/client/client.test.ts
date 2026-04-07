@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DgiiClient } from '../../src/client/client.js';
 import {
-  DgiiConnectionError,
   DgiiNotFoundError,
   AllStrategiesFailedError,
 } from '../../src/errors/index.js';

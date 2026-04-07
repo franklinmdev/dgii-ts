@@ -156,7 +156,8 @@ describe('ScrapingClient', () => {
     );
 
     const client = new ScrapingClient();
-    const err = await client.getContribuyente('131098193').catch((e: DgiiServiceError) => e);
+    const err = await client.getContribuyente('131098193')
+      .catch((e: unknown) => e) as DgiiServiceError;
     expect(err).toBeInstanceOf(DgiiServiceError);
     expect(err.statusCode).toBe(403);
   });
