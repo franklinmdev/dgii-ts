@@ -21,6 +21,9 @@ export interface Contribuyente {
   nombreComercial: string;
   estado: string;
   categoria: string;
+  actividadEconomica?: string;
+  regimenDePagos?: string;
+  administracionLocal?: string;
 }
 
 /**

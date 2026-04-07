@@ -27,4 +27,30 @@ describe('public API exports', () => {
     expect(dgii.downloadBulkFile).toBeTypeOf('function');
     expect(dgii.parseBulkFile).toBeTypeOf('function');
   });
+
+  it('exporta las clases de error', () => {
+    expect(dgii.DgiiError).toBeTypeOf('function');
+    expect(dgii.DgiiConnectionError).toBeTypeOf('function');
+    expect(dgii.DgiiNotFoundError).toBeTypeOf('function');
+    expect(dgii.DgiiServiceError).toBeTypeOf('function');
+    expect(dgii.AllStrategiesFailedError).toBeTypeOf('function');
+  });
+
+  it('exporta la URL del archivo masivo', () => {
+    expect(dgii.DGII_BULK_URL).toBeTypeOf('string');
+    expect(dgii.DGII_BULK_URL).toContain('DGII_RNC.zip');
+  });
+
+  it('exporta el cliente de scraping', () => {
+    expect(dgii.ScrapingClient).toBeTypeOf('function');
+    expect(dgii.DGII_RNC_URL).toBeTypeOf('string');
+    expect(dgii.DGII_NCF_URL).toBeTypeOf('string');
+  });
+
+  it('exporta el cliente resiliente', () => {
+    expect(dgii.DgiiClient).toBeTypeOf('function');
+    expect(dgii.ConsecutiveBreaker).toBeTypeOf('function');
+    expect(dgii.withRetry).toBeTypeOf('function');
+    expect(dgii.isRetryableError).toBeTypeOf('function');
+  });
 });

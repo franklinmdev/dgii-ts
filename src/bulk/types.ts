@@ -13,3 +13,6 @@ export interface ParseOptions {
   /** Ruta al archivo TXT extraído del ZIP */
   filePath: string;
 }
+
+export const DGII_BULK_URL: string =
+  'https://dgii.gov.do/app/WebApps/Consultas/RNC/DGII_RNC.zip';

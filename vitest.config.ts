@@ -10,7 +10,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/index.ts'],
+      exclude: [
+        'src/**/index.ts',
+        'src/soap/types.ts',
+        'src/scraping/types.ts',
+        'src/client/types.ts',
+        'src/soap/errors.ts',
+      ],
       thresholds: {
         statements: 90,
         branches: 90,

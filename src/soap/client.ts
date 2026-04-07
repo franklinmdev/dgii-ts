@@ -1,10 +1,15 @@
 import type { Contribuyente, NcfQueryResult, SoapClientOptions } from './types.js';
-import { DGII_SOAP_BASE_URL } from './endpoints.js';
+import { DGII_SOAP_BASE_URL, SOAP_ACTIONS } from './endpoints.js';
+import { buildGetContribuyentesEnvelope, buildGetNcfEnvelope } from './envelopes.js';
+import { parseContribuyenteResponse, parseNcfResponse } from './parser.js';
+import { DgiiServiceError } from '../errors/index.js';
+import { wrapFetchError } from '../utils/fetch-error.js';
 
 /**
  * Cliente SOAP tipado para el servicio WSMovilDGII de la DGII.
  *
- * TODO: Implementar llamadas SOAP con node:https.
+ * @deprecated Usar {@link DgiiClient} en su lugar. El endpoint SOAP
+ * de la DGII fue bloqueado permanentemente en enero 2025.
  */
 export class DgiiSoapClient {
   private readonly _options: Required<SoapClientOptions>;
@@ -21,23 +26,86 @@ export class DgiiSoapClient {
     };
   }
 
+  private async _fetch(
+    soapAction: string,
+    body: string,
+  ): Promise<string> {
+    const url = this._options.baseUrl;
+    const timeout = this._options.timeout;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type':
+            `application/soap+xml; charset=utf-8; action="${soapAction}"`,
+        },
+        body,
+        signal: AbortSignal.timeout(timeout),
+      });
+    } catch (error: unknown) {
+      throw wrapFetchError(error, timeout);
+    }
+
+    // Defense against oversized responses (max 1 MB).
+    // Check Content-Length BEFORE reading the body into memory.
+    const contentLength = response.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 1_048_576) {
+      throw new DgiiServiceError(
+        'Respuesta de la DGII excede el tamano maximo permitido',
+      );
+    }
+
+    if (response.status === 403) {
+      throw new DgiiServiceError(
+        'Acceso denegado por la DGII (HTTP 403). '
+        + 'El servicio puede estar restringido por ubicacion geografica.',
+        { statusCode: 403 },
+      );
+    }
+
+    if (!response.ok) {
+      throw new DgiiServiceError(
+        `El servicio de la DGII respondio con HTTP ${response.status}`,
+        { statusCode: response.status },
+      );
+    }
+
+    return response.text();
+  }
+
   /**
-   * Consulta datos de un contribuyente por RNC o cédula.
-   *
-   * TODO: Implementar llamada SOAP a GetContribuyentes.
+   * Consulta datos de un contribuyente por RNC o cedula.
    */
-  async getContribuyente(_rnc: string): Promise<Contribuyente> {
-    void this._options; // consumed when SOAP calls are implemented
-    throw new Error('getContribuyente: no implementado.');
+  async getContribuyente(rnc: string): Promise<Contribuyente> {
+    if (typeof rnc !== 'string' || rnc.trim() === '') {
+      throw new DgiiServiceError('El parametro rnc es requerido');
+    }
+
+    const envelope = buildGetContribuyentesEnvelope(rnc.trim());
+    const responseXml = await this._fetch(
+      SOAP_ACTIONS.getContribuyentes,
+      envelope,
+    );
+
+    return parseContribuyenteResponse(responseXml);
   }
 
   /**
    * Valida un comprobante fiscal (NCF) contra la DGII.
-   *
-   * TODO: Implementar llamada SOAP a GetNCF.
    */
-  async getNCF(_rnc: string, _ncf: string): Promise<NcfQueryResult> {
-    void this._options;
-    throw new Error('getNCF: no implementado.');
+  async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
+    if (typeof rnc !== 'string' || rnc.trim() === '') {
+      throw new DgiiServiceError('El parametro rnc es requerido');
+    }
+    if (typeof ncf !== 'string' || ncf.trim() === '') {
+      throw new DgiiServiceError('El parametro ncf es requerido');
+    }
+
+    const envelope = buildGetNcfEnvelope(rnc.trim(), ncf.trim());
+    const responseXml = await this._fetch(SOAP_ACTIONS.getNCF, envelope);
+
+    return parseNcfResponse(responseXml);
   }
 }

@@ -26,6 +26,11 @@ describe('validateRnc', () => {
       expect(result.formatted).toBe('1-01-00715-1');
     });
 
+    it('valida RNC con remainder=0 (check digit 2)', () => {
+      const result = validateRnc('100000022');
+      expect(result.valid).toBe(true);
+    });
+
     it('valida RNC 130692092', () => {
       const result = validateRnc('130692092');
       expect(result.valid).toBe(true);

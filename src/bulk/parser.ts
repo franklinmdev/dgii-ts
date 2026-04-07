@@ -1,12 +1,43 @@
+import { createReadStream } from 'node:fs';
+import { createInterface } from 'node:readline';
 import type { BulkContribuyente, ParseOptions } from './types.js';
+import { collapseSpaces } from '../utils/index.js';
 
 /**
- * Parsea el archivo TXT de contribuyentes extraído de DGII_RNC.zip.
+ * Parsea el archivo TXT de contribuyentes extraido de DGII_RNC.zip.
  *
- * TODO: Implementar parseo del formato pipe-delimited de la DGII.
+ * El archivo usa delimitador pipe (|) con 9 columnas.
+ * Los registros pueden tener espacios dobles que se limpian.
  */
 export async function parseBulkFile(
-  _options: ParseOptions,
+  options: ParseOptions,
 ): Promise<BulkContribuyente[]> {
-  throw new Error('parseBulkFile: no implementado.');
+  const results: BulkContribuyente[] = [];
+
+  const rl = createInterface({
+    input: createReadStream(options.filePath, { encoding: 'utf-8' }),
+    crlfDelay: Infinity,
+  });
+
+  for await (const line of rl) {
+    if (line.trim() === '') continue;
+
+    const fields = line.split('|');
+
+    // Require at least the first 7 fields (some rows may have
+    // fewer columns at the end)
+    if (fields.length < 7) continue;
+
+    results.push({
+      rnc: collapseSpaces(fields[0] ?? ''),
+      nombre: collapseSpaces(fields[1] ?? ''),
+      nombreComercial: collapseSpaces(fields[2] ?? ''),
+      actividad: collapseSpaces(fields[6] ?? ''),
+      estado: collapseSpaces(fields[5] ?? ''),
+      regimen: collapseSpaces(fields[4] ?? ''),
+      fechaConstitucion: collapseSpaces(fields[7] ?? ''),
+    });
+  }
+
+  return results;
 }

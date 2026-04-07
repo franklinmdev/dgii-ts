@@ -15,6 +15,9 @@ CLAUDE.local.md
 # Chief (personal automation)
 .chief/
 
+# Smoke test (local dev tool)
+scripts/smoke-test.mjs
+
 # Other AI tools
 .aider*
 .cursor/

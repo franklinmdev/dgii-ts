@@ -1,3 +1,4 @@
+/** @deprecated Endpoint bloqueado permanentemente desde enero 2025. */
 export const DGII_SOAP_BASE_URL =
   'https://dgii.gov.do/wsMovilDGII/WSMovilDGII.asmx';
 
