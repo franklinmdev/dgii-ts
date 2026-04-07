@@ -1,6 +1,6 @@
 {
   "name": "dgii-ts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Librería TypeScript para validación e integración con la DGII de República Dominicana — RNC, Cédula, NCF, e-NCF",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -48,16 +48,34 @@
       }
     },
     "./scraping": {
-      "import": { "types": "./dist/scraping.d.ts", "default": "./dist/scraping.js" },
-      "require": { "types": "./dist/scraping.d.cts", "default": "./dist/scraping.cjs" }
+      "import": {
+        "types": "./dist/scraping.d.ts",
+        "default": "./dist/scraping.js"
+      },
+      "require": {
+        "types": "./dist/scraping.d.cts",
+        "default": "./dist/scraping.cjs"
+      }
     },
     "./client": {
-      "import": { "types": "./dist/client.d.ts", "default": "./dist/client.js" },
-      "require": { "types": "./dist/client.d.cts", "default": "./dist/client.cjs" }
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      },
+      "require": {
+        "types": "./dist/client.d.cts",
+        "default": "./dist/client.cjs"
+      }
     },
     "./errors": {
-      "import": { "types": "./dist/errors.d.ts", "default": "./dist/errors.js" },
-      "require": { "types": "./dist/errors.d.cts", "default": "./dist/errors.cjs" }
+      "import": {
+        "types": "./dist/errors.d.ts",
+        "default": "./dist/errors.js"
+      },
+      "require": {
+        "types": "./dist/errors.d.cts",
+        "default": "./dist/errors.cjs"
+      }
     }
   },
   "sideEffects": false,
