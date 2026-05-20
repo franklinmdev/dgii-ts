@@ -14,6 +14,10 @@ export type NcfValidationResult =
 
 /**
  * Datos de un contribuyente registrado en la DGII.
+ *
+ * `esFacturadorElectronico` indica si la DGII certificó al RNC como
+ * emisor de e-CF. Hoy solo el parser de scraping deriva el valor real;
+ * el parser SOAP retorna `false` hasta que la DGII restaure el endpoint.
  */
 export interface Contribuyente {
   rnc: string;
@@ -21,6 +25,7 @@ export interface Contribuyente {
   nombreComercial: string;
   estado: string;
   categoria: string;
+  esFacturadorElectronico: boolean;
   actividadEconomica?: string;
   regimenDePagos?: string;
   administracionLocal?: string;

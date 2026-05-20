@@ -239,6 +239,44 @@ describe('parseContribuyenteHtml', () => {
     expect(result.rnc).toBe('');
     expect(result.nombre).toBe('');
   });
+
+  it('extrae esFacturadorElectronico=true cuando fila dice SI', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '401-50625-4'],
+      ['Nombre/Razon Social', 'DIRECCION GENERAL DE IMPUESTOS INTERNOS'],
+      ['Nombre Comercial', 'DGII'],
+      ['Estado', 'ACTIVO'],
+      ['Facturador Electr&#243;nico', 'SI'],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.esFacturadorElectronico).toBe(true);
+  });
+
+  it('extrae esFacturadorElectronico=false cuando fila dice NO', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '131-09819-3'],
+      ['Nombre/Razon Social', 'EMPRESA EJEMPLO SRL'],
+      ['Nombre Comercial', 'EJEMPLO'],
+      ['Estado', 'ACTIVO'],
+      ['Facturador Electr&#243;nico', 'NO'],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.esFacturadorElectronico).toBe(false);
+  });
+
+  it('esFacturadorElectronico=false cuando la fila no existe', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '123456789'],
+      ['Nombre/Razon Social', 'TEST'],
+      ['Nombre Comercial', ''],
+      ['Estado', 'ACTIVO'],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.esFacturadorElectronico).toBe(false);
+  });
 });
 
 describe('parseNcfHtml', () => {

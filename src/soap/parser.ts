@@ -73,6 +73,8 @@ export function parseContribuyenteResponse(
     nombreComercial: collapseSpaces(String(data['NOMBRE_COMERCIAL'] ?? '')),
     estado: String(data['ESTATUS'] ?? '') === '2' ? 'ACTIVO' : 'INACTIVO',
     categoria: String(data['CATEGORIA'] ?? ''),
+    // TODO: derivar de la respuesta SOAP cuando la DGII restaure el endpoint
+    esFacturadorElectronico: false,
   };
 }
 

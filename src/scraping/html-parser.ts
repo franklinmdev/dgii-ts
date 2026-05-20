@@ -89,6 +89,8 @@ export function parseContribuyenteHtml(html: string): Contribuyente {
     fields.get('Regimen de pagos') ?? undefined;
   const administracionLocal =
     fields.get('Administracion Local') ?? undefined;
+  const rawFacturadorElectronico =
+    fields.get('Facturador Electronico') ?? '';
 
   return {
     rnc: stripNonDigits(rnc),
@@ -98,6 +100,11 @@ export function parseContribuyenteHtml(html: string): Contribuyente {
       ? 'ACTIVO'
       : 'INACTIVO',
     categoria: collapseSpaces(categoria),
+    esFacturadorElectronico: rawFacturadorElectronico
+      .trim()
+      .toUpperCase()
+      .replace(/[ÍI]/g, 'I')
+      .startsWith('SI'),
     actividadEconomica: actividadEconomica
       ? collapseSpaces(actividadEconomica)
       : undefined,
