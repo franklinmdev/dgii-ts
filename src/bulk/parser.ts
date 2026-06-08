@@ -10,6 +10,21 @@ const KNOWN_ESTADOS: ReadonlySet<string> = new Set(DGII_ESTADOS);
 /** Número exacto de columnas del layout actual del archivo masivo. */
 const EXPECTED_COLUMNS = 11;
 
+/**
+ * Índice de cada campo dentro de la fila pipe-delimited. Única fuente de
+ * verdad del mapeo columna→campo: las columnas 4–7 quedan reservadas/vacías
+ * en el archivo actual, de ahí el salto de 3 a 8.
+ */
+const COLUMN = {
+  rnc: 0,
+  nombre: 1,
+  nombreComercial: 2,
+  actividad: 3,
+  fechaConstitucion: 8,
+  estado: 9,
+  regimen: 10,
+} as const;
+
 /** Cuántas filas se muestrean para validar el formato antes de aceptarlo. */
 const ESTADO_SAMPLE_SIZE = 1000;
 
@@ -98,13 +113,13 @@ export async function parseBulkFile(
     if (fields.length !== EXPECTED_COLUMNS) continue;
 
     results.push({
-      rnc: collapseSpaces(fields[0]!),
-      nombre: collapseSpaces(fields[1]!),
-      nombreComercial: collapseSpaces(fields[2]!),
-      actividad: collapseSpaces(fields[3]!),
-      fechaConstitucion: collapseSpaces(fields[8]!),
-      estado: collapseSpaces(fields[9]!).toUpperCase(),
-      regimen: collapseSpaces(fields[10]!),
+      rnc: collapseSpaces(fields[COLUMN.rnc]!),
+      nombre: collapseSpaces(fields[COLUMN.nombre]!),
+      nombreComercial: collapseSpaces(fields[COLUMN.nombreComercial]!),
+      actividad: collapseSpaces(fields[COLUMN.actividad]!),
+      fechaConstitucion: collapseSpaces(fields[COLUMN.fechaConstitucion]!),
+      estado: collapseSpaces(fields[COLUMN.estado]!).toUpperCase(),
+      regimen: collapseSpaces(fields[COLUMN.regimen]!),
     });
   }
 
