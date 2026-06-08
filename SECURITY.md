@@ -16,7 +16,9 @@ through [GitHub Security Advisories](https://github.com/franklinmdev/dgii-ts/sec
 ### Scope
 
 - Validators (RNC, cedula, NCF, e-NCF)
-- SOAP client
+- Resilient client (DgiiClient): circuit breaker and retry
+- Scraping client (DGII ASP.NET pages)
+- SOAP client (deprecated)
 - Bulk downloader/parser
 
 ### Response timeline

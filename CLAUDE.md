@@ -8,7 +8,9 @@ with code in this repository.
 dgii-ts is a TypeScript library for validating Dominican Republic tax
 identifiers and integrating with the DGII (Dirección General de
 Impuestos Internos). It provides offline validators for RNC, cédula,
-NCF, and e-NCF, plus stubs for a SOAP client and bulk file operations.
+NCF, and e-NCF; a resilient client (web scraping with SOAP fallback,
+circuit breaker, retry); a deprecated SOAP client; and a bulk
+DGII_RNC.zip downloader/parser.
 
 ## Commands
 
@@ -25,9 +27,9 @@ npx vitest run --coverage
 
 ## Architecture
 
-The library has four subpath exports (`./`, `./validators`, `./soap`,
-`./bulk`) built via tsup with code splitting. `src/index.ts` re-exports
-everything.
+The library has seven subpath exports (`./`, `./validators`,
+`./client`, `./scraping`, `./soap`, `./bulk`, `./errors`) built via
+tsup with code splitting. `src/index.ts` re-exports everything.
 
 - **`src/validators/`** — Pure offline validators, no network calls.
   Each validator returns a typed result (`ValidationResult` or
@@ -36,12 +38,30 @@ everything.
   (series E) are format-only checks with known type code mappings.
   Whitelists in `rnc-whitelist.ts` and `cedula-whitelist.ts` bypass
   algorithmic checks for known-valid identifiers.
-- **`src/soap/`** — SOAP client skeleton for DGII's WSMovilDGII
-  service. Currently stub implementations that throw "Not implemented".
-- **`src/bulk/`** — Bulk file download/parse skeleton. Currently stubs.
+- **`src/client/`** — `DgiiClient`, the recommended entry point for
+  live queries. Runs scraping as the primary strategy with SOAP
+  fallback, wrapped in a consecutive-failure circuit breaker
+  (`circuit-breaker.ts`) and exponential-backoff retry (`retry.ts`).
+- **`src/scraping/`** — `ScrapingClient` for DGII's ASP.NET WebForms
+  pages: extracts ViewState tokens (`endpoints.ts`, `FORM_FIELDS`) and
+  parses response HTML (`html-parser.ts`). Primary live strategy since
+  DGII blocked the SOAP endpoint in January 2025.
+- **`src/soap/`** — `DgiiSoapClient` for the WSMovilDGII SOAP service
+  (hand-rolled envelopes in `envelopes.ts`, XML parsing in `xml.ts`).
+  Deprecated: DGII blocked this endpoint in January 2025; kept only as
+  the client's internal fallback.
+- **`src/bulk/`** — Downloads (`downloader.ts`) and parses
+  (`parser.ts`) DGII's daily `DGII_RNC.zip`. The parser maps a fixed
+  11-column layout via a named COLUMN index table and throws
+  `BulkFormatError` on column-count or `estado` drift. Accepts an
+  `encoding` option (`latin1` default).
+- **`src/errors/`** — `DgiiError` base plus `DgiiConnectionError`,
+  `DgiiNotFoundError`, `DgiiServiceError`, `AllStrategiesFailedError`,
+  and `BulkFormatError`, each with a stable `code`.
 - **`src/types/`** — Shared interfaces (`ValidationResult`,
   `NcfValidationResult`, `Contribuyente`, etc.).
-- **`src/utils/`** — `stripNonDigits()` helper used by validators.
+- **`src/utils/`** — `stripNonDigits()` and `collapseSpaces()` string
+  helpers.
 
 ## Code conventions
 
