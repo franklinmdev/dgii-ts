@@ -64,3 +64,16 @@ export class AllStrategiesFailedError extends DgiiError {
     this.errors = errors;
   }
 }
+
+/**
+ * El archivo masivo (DGII_RNC.zip) no coincide con el layout esperado:
+ * cambió el número de columnas o la columna `estado` dejó de traer
+ * valores reconocidos. Se lanza para que un cambio de formato de la DGII
+ * falle de forma ruidosa en vez de devolver `estado` vacío en silencio.
+ */
+export class BulkFormatError extends DgiiError {
+  constructor(message: string) {
+    super(message, 'DGII_BULK_FORMAT_ERROR');
+    this.name = 'BulkFormatError';
+  }
+}

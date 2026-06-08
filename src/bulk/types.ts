@@ -16,3 +16,18 @@ export interface ParseOptions {
 
 export const DGII_BULK_URL: string =
   'https://dgii.gov.do/app/WebApps/Consultas/RNC/DGII_RNC.zip';
+
+/**
+ * Valores conocidos de la columna `estado` (col 9) en el archivo masivo,
+ * verificados contra ~778k filas en producción. El parser usa este
+ * vocabulario para detectar un cambio de layout: si ninguna fila de una
+ * muestra trae un `estado` reconocido, el formato de la DGII cambió.
+ */
+export const DGII_ESTADOS: readonly string[] = /*#__PURE__*/ Object.freeze([
+  'ACTIVO',
+  'SUSPENDIDO',
+  'DADO DE BAJA',
+  'CESE TEMPORAL',
+  'ANULADO',
+  'RECHAZADO',
+]);

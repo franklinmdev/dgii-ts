@@ -1,6 +1,6 @@
 {
   "name": "dgii-ts",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Librería TypeScript para validación e integración con la DGII de República Dominicana — RNC, Cédula, NCF, e-NCF",
   "type": "module",
   "main": "./dist/index.cjs",

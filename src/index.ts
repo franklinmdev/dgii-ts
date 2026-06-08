@@ -15,6 +15,7 @@ export {
   DgiiNotFoundError,
   DgiiServiceError,
   AllStrategiesFailedError,
+  BulkFormatError,
 } from './errors/index.js';
 
 export { ScrapingClient, DGII_RNC_URL, DGII_NCF_URL } from './scraping/index.js';
@@ -27,7 +28,7 @@ export {
 } from './client/index.js';
 
 export { downloadBulkFile, parseBulkFile } from './bulk/index.js';
-export { DGII_BULK_URL } from './bulk/index.js';
+export { DGII_BULK_URL, DGII_ESTADOS } from './bulk/index.js';
 
 export type {
   ValidationResult,
