@@ -49,6 +49,13 @@ export interface BulkContribuyente {
   nombre: string;
   nombreComercial: string;
   actividad: string;
+  /**
+   * Estado tal como lo trae el archivo masivo, normalizado a mayúsculas:
+   * uno de los valores de `DGII_ESTADOS` (ACTIVO, SUSPENDIDO, DADO DE
+   * BAJA, ...). Es un vocabulario más amplio que el `estado` binario
+   * (ACTIVO/INACTIVO) de {@link Contribuyente}, así que no son
+   * intercambiables al comparar entre fuentes.
+   */
   estado: string;
   regimen: string;
   fechaConstitucion: string;

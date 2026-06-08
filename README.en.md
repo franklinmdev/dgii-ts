@@ -180,6 +180,10 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | `downloadBulkFile(options)` | Downloads DGII\_RNC.zip to the given directory |
 | `parseBulkFile(options)` | Parses the taxpayer TXT file |
 
+`parseBulkFile` throws `BulkFormatError` if the file doesn't match the
+expected 11-column layout (for example, if DGII changes the format). It
+accepts an `encoding` option (defaults to `latin1`).
+
 ## Architecture
 
 ```text

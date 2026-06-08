@@ -180,9 +180,9 @@ describe('parseBulkFile', () => {
   });
 
   it('lanza BulkFormatError ante el layout viejo de 9 columnas', async () => {
-    // Formato viejo (9 columnas): el parser nuevo no encuentra estado@9,
-    // descarta las filas y, al no quedar ninguna, falla ruidosamente en
-    // vez de devolver estado vacío en silencio.
+    // Formato viejo (9 columnas): cada fila tiene ≠11 columnas y se
+    // descarta por malformada; al no quedar ninguna fila válida, el guard
+    // de formato falla ruidosamente en vez de devolver datos en silencio.
     const content = [
       '131098193|EMPRESA UNO SRL|COMERCIAL UNO|CAT1|NORMAL|ACTIVO|COMERCIO|2020-01-01|SANTO DOMINGO',
       '401007738|EMPRESA DOS SRL|COMERCIAL DOS|CAT2|RST|SUSPENDIDO|MANUFACTURA|2019-06-15|SANTIAGO',
@@ -212,6 +212,134 @@ describe('parseBulkFile', () => {
     ].join('|');
 
     const filePath = join(tempDir, 'drift.txt');
+    await writeFile(filePath, content, 'latin1');
+
+    await expect(parseBulkFile({ filePath })).rejects.toThrow(BulkFormatError);
+  });
+
+  it('normaliza estado a mayúsculas y acepta capitalización mixta', async () => {
+    // Si la fuente trae 'Activo' (no ACTIVO) no debe fallar: estado se
+    // normaliza a mayúsculas y el guard lo reconoce.
+    const content = row({
+      rnc: '131098193',
+      nombre: 'EMPRESA UNO SRL',
+      estado: 'Activo',
+    });
+
+    const filePath = join(tempDir, 'data.txt');
+    await writeFile(filePath, content, 'latin1');
+
+    const results = await parseBulkFile({ filePath });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.estado).toBe('ACTIVO');
+  });
+
+  it('lanza BulkFormatError si solo una minoría trae un estado reconocido', async () => {
+    // Layout cambiado: la col 9 ya no es estado. Un solo acierto casual no
+    // debe alcanzar para aceptar todo el archivo (1 de 4 = 25% < 50%).
+    const content = [
+      row({ rnc: '1', nombre: 'A', estado: 'ACTIVO' }),
+      row({ rnc: '2', nombre: 'B', estado: 'CALLE DUARTE' }),
+      row({ rnc: '3', nombre: 'C', estado: 'SANTO DOMINGO' }),
+      row({ rnc: '4', nombre: 'D', estado: 'SANTIAGO' }),
+    ].join('\n');
+
+    const filePath = join(tempDir, 'minoria.txt');
+    await writeFile(filePath, content, 'latin1');
+
+    await expect(parseBulkFile({ filePath })).rejects.toThrow(BulkFormatError);
+  });
+
+  it('acepta el archivo si la mayoría trae un estado reconocido', async () => {
+    // Un valor de estado nuevo y minoritario no debe romper el parseo.
+    const content = [
+      row({ rnc: '1', nombre: 'A', estado: 'ACTIVO' }),
+      row({ rnc: '2', nombre: 'B', estado: 'SUSPENDIDO' }),
+      row({ rnc: '3', nombre: 'C', estado: 'NUEVO-ESTADO' }),
+    ].join('\n');
+
+    const filePath = join(tempDir, 'mayoria.txt');
+    await writeFile(filePath, content, 'latin1');
+
+    const results = await parseBulkFile({ filePath });
+    expect(results).toHaveLength(3);
+    expect(results[2]!.estado).toBe('NUEVO-ESTADO');
+  });
+
+  it('respeta la codificación indicada en options (UTF-8)', async () => {
+    const content = row({
+      rnc: '09200033133',
+      nombre: 'RAMON MARIA DIAZ MUÑOZ',
+      nombreComercial: 'COMERCIAL PEÑA',
+      estado: 'ACTIVO',
+    });
+
+    const filePath = join(tempDir, 'utf8.txt');
+    await writeFile(filePath, content, 'utf8');
+
+    const results = await parseBulkFile({ filePath, encoding: 'utf8' });
+    expect(results[0]!.nombre).toBe('RAMON MARIA DIAZ MUÑOZ');
+    expect(results[0]!.nombreComercial).toBe('COMERCIAL PEÑA');
+  });
+
+  it('ignora un BOM inicial sin corromper el primer rnc', async () => {
+    const body = row({
+      rnc: '131098193',
+      nombre: 'EMPRESA UNO SRL',
+      estado: 'ACTIVO',
+    });
+    const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+    const filePath = join(tempDir, 'bom.txt');
+    await writeFile(filePath, Buffer.concat([bom, Buffer.from(body, 'latin1')]));
+
+    const results = await parseBulkFile({ filePath });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.rnc).toBe('131098193');
+  });
+
+  it('ignora un BOM UTF-8 al leer con encoding utf8', async () => {
+    const body = row({
+      rnc: '131098193',
+      nombre: 'EMPRESA MUÑOZ',
+      estado: 'ACTIVO',
+    });
+    const filePath = join(tempDir, 'bom-utf8.txt');
+    // El prefijo U+FEFF escrito como UTF-8 produce los bytes EF BB BF.
+    await writeFile(filePath, `\uFEFF${body}`, 'utf8');
+
+    const results = await parseBulkFile({ filePath, encoding: 'utf8' });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.rnc).toBe('131098193');
+    expect(results[0]!.nombre).toBe('EMPRESA MUÑOZ');
+  });
+
+  it('descarta filas con más de 11 columnas', async () => {
+    const valida = row({
+      rnc: '131098193',
+      nombre: 'EMPRESA UNO SRL',
+      estado: 'ACTIVO',
+    });
+    const content = [
+      valida,
+      `${valida}|COLUMNA_EXTRA`, // 12 columnas
+    ].join('\n');
+
+    const filePath = join(tempDir, 'extra.txt');
+    await writeFile(filePath, content, 'latin1');
+
+    const results = await parseBulkFile({ filePath });
+    expect(results).toHaveLength(1);
+  });
+
+  it('lanza BulkFormatError cuando todas las filas traen una columna de más', async () => {
+    // La DGII añade/inserta una columna: el conteo exacto descarta todas las
+    // filas y el guard falla ruidosamente en vez de mapear campos corridos.
+    const content = [
+      `${row({ rnc: '1', nombre: 'A', estado: 'ACTIVO' })}|EXTRA`,
+      `${row({ rnc: '2', nombre: 'B', estado: 'ACTIVO' })}|EXTRA`,
+    ].join('\n');
+
+    const filePath = join(tempDir, 'todas-extra.txt');
     await writeFile(filePath, content, 'latin1');
 
     await expect(parseBulkFile({ filePath })).rejects.toThrow(BulkFormatError);

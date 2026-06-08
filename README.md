@@ -183,6 +183,10 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | `downloadBulkFile(options)` | Descarga DGII\_RNC.zip |
 | `parseBulkFile(options)` | Parsea el archivo TXT |
 
+`parseBulkFile` lanza `BulkFormatError` si el archivo no coincide con el
+layout de 11 columnas esperado (por ejemplo, si la DGII cambia el formato).
+Acepta `encoding` en las opciones (`latin1` por defecto).
+
 ## Arquitectura
 
 ```text

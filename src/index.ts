@@ -41,4 +41,4 @@ export type {
 export type { SoapClientOptions } from './soap/index.js';
 export type { ScrapingClientOptions } from './scraping/index.js';
 export type { ClientOptions, RetryOptions, CircuitBreakerOptions } from './client/index.js';
-export type { DownloadOptions, ParseOptions } from './bulk/index.js';
+export type { DownloadOptions, ParseOptions, DgiiEstado } from './bulk/index.js';

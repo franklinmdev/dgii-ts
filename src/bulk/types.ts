@@ -12,6 +12,12 @@ export interface DownloadOptions {
 export interface ParseOptions {
   /** Ruta al archivo TXT extraído del ZIP */
   filePath: string;
+  /**
+   * Codificación del archivo. La DGII publica el TXT en latin-1
+   * (ISO-8859-1), que es el valor por defecto. Permite anularla si una
+   * futura versión del archivo llega en otra codificación (p. ej. UTF-8).
+   */
+  encoding?: BufferEncoding;
 }
 
 export const DGII_BULK_URL: string =
@@ -23,11 +29,18 @@ export const DGII_BULK_URL: string =
  * vocabulario para detectar un cambio de layout: si ninguna fila de una
  * muestra trae un `estado` reconocido, el formato de la DGII cambió.
  */
-export const DGII_ESTADOS: readonly string[] = /*#__PURE__*/ Object.freeze([
+export const DGII_ESTADOS = /*#__PURE__*/ Object.freeze([
   'ACTIVO',
   'SUSPENDIDO',
   'DADO DE BAJA',
   'CESE TEMPORAL',
   'ANULADO',
   'RECHAZADO',
-]);
+] as const);
+
+/**
+ * Valor de la columna `estado` del archivo masivo: uno de
+ * {@link DGII_ESTADOS}. Vocabulario completo de la DGII, distinto del
+ * `estado` binario (ACTIVO/INACTIVO) que exponen el scraping y el SOAP.
+ */
+export type DgiiEstado = (typeof DGII_ESTADOS)[number];

@@ -9,10 +9,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,12 +24,22 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high
+      # Audita solo dependencias de producción: la librería no trae deps en
+      # runtime, así un CVE en una herramienta de desarrollo (vitest, etc.)
+      # no bloquea una publicación que no lo incluye.
+      - run: npm audit --omit=dev --audit-level=high
 
   publish:
     needs: test
     runs-on: ubuntu-latest
     environment: npm-publish
+    # Serializa SOLO la publicación: un push a main y el evento `release`
+    # del mismo commit comparten este grupo constante, así nunca corren dos
+    # `npm publish` a la vez para la misma versión. cancel-in-progress:false
+    # los encola en vez de cancelarlos. Los jobs de test siguen en paralelo.
+    concurrency:
+      group: ${{ github.workflow }}-publish
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
@@ -50,12 +56,27 @@ jobs:
       - id: version
         run: |
           LOCAL="$(node -p "require('./package.json').version")"
-          if npm view "dgii-ts@${LOCAL}" version >/dev/null 2>&1; then
-            echo "dgii-ts@${LOCAL} already published — skipping."
+          echo "Versión local: dgii-ts@${LOCAL}"
+          # No usar el código de salida como único indicador: `npm view`
+          # devuelve no-cero tanto cuando la versión no existe (E404, hay
+          # que publicar) como ante un fallo de registro/red. Distinguir
+          # ambos: una versión faltante trae E404 en stderr; cualquier otro
+          # fallo aborta el step (exit 1) en vez de intentar una publicación
+          # que la npm rechazaría con 403 y dejaría el job en rojo.
+          set +e
+          REMOTE="$(npm view "dgii-ts@${LOCAL}" version 2>/tmp/npm-view-err.txt)"
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -eq 0 ] && [ -n "$REMOTE" ]; then
+            echo "dgii-ts@${LOCAL} ya está publicado — se omite."
             echo "publish=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "dgii-ts@${LOCAL} is new — publishing."
+          elif grep -q 'E404' /tmp/npm-view-err.txt; then
+            echo "dgii-ts@${LOCAL} es nuevo — se publicará."
             echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::npm view falló por un motivo distinto a E404 (¿registro caído o problema de red?). No se publica para evitar un intento erróneo."
+            cat /tmp/npm-view-err.txt
+            exit 1
           fi
       - if: steps.version.outputs.publish == 'true'
         run: npm publish --provenance --access public
