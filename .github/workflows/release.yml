@@ -1,12 +1,17 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -15,8 +20,8 @@ jobs:
       matrix:
         node-version: [18, 20, 22]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -28,14 +33,29 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
-      - run: npm publish --provenance --access public
+      # Publish only when package.json's version isn't already on npm, so an
+      # ordinary push to main is a no-op and only a version bump triggers a
+      # release. Idempotent: re-running never republishes the same version.
+      - id: version
+        run: |
+          LOCAL="$(node -p "require('./package.json').version")"
+          if npm view "dgii-ts@${LOCAL}" version >/dev/null 2>&1; then
+            echo "dgii-ts@${LOCAL} already published — skipping."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "dgii-ts@${LOCAL} is new — publishing."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.version.outputs.publish == 'true'
+        run: npm publish --provenance --access public
