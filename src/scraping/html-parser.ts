@@ -178,7 +178,89 @@ export function parseNcfHtml(html: string): NcfQueryResult {
   };
 }
 
+/**
+ * Parsea el HTML de respuesta de la consulta de un e-NCF (serie E).
+ *
+ * La DGII retorna un table con `<th>` y `<span>` dentro de
+ * `<div id="cphMain_PResultadoFE">`. Esta función extrae los valores
+ * por el `id` de cada `<span>`.
+ */
+export function parseEcfHtml(html: string): NcfQueryResult {
+  // Detectar mensajes de error o "no válido"
+  const infoStart = html.indexOf('cphMain_lblInformacion');
+  if (infoStart !== -1) {
+    const infoEnd = html.indexOf('</span>', infoStart);
+    if (infoEnd !== -1) {
+      const infoBlock = html.slice(infoStart, infoEnd);
+      if (
+        infoBlock.includes('no es v') ||
+        infoBlock.includes('no se encuentra') ||
+        infoBlock.includes('no existe')
+      ) {
+        return { valid: false, rnc: '', ncf: '' };
+      }
+    }
+  }
+
+  // El resultado E-series está dentro de <div id="cphMain_PResultadoFE">
+  if (!html.includes('cphMain_PResultadoFE')) {
+    return { valid: false, rnc: '', ncf: '' };
+  }
+
+  const rncEmisor = extractSpanValue(html, 'cphMain_lblrncemisor');
+  const ncf = extractSpanValue(html, 'cphMain_lblencf');
+
+  if (!rncEmisor && !ncf) {
+    return { valid: false, rnc: '', ncf: '' };
+  }
+
+  const nombreComercial = extractSpanValue(html, 'cphMain_lblRazonSocial');
+  const rncComprador = extractSpanValue(html, 'cphMain_lblrnccomprador');
+  const codigoSeguridad = extractSpanValue(html, 'cphMain_lblCodSeguridad');
+  const estado = extractSpanValue(html, 'cphMain_lblEstadoFe');
+  const montoTotalStr = extractSpanValue(html, 'cphMain_lblMontoTotal');
+  const totalItbisStr = extractSpanValue(html, 'cphMain_lblTotalItbis');
+  const fechaEmision = extractSpanValue(html, 'cphMain_lblFechaEmision');
+  const fechaFirma = extractSpanValue(html, 'cphMain_lblFechaFirma');
+
+  return {
+    valid: true,
+    rnc: stripNonDigits(rncEmisor),
+    ncf: collapseSpaces(ncf),
+    nombreComercial: nombreComercial
+      ? collapseSpaces(nombreComercial)
+      : undefined,
+    rncComprador: rncComprador
+      ? stripNonDigits(rncComprador)
+      : undefined,
+    codigoSeguridad: codigoSeguridad || undefined,
+    estado: estado || undefined,
+    montoTotal: montoTotalStr
+      ? parseFloat(montoTotalStr.replace(/,/g, ''))
+      : undefined,
+    totalItbis: totalItbisStr
+      ? parseFloat(totalItbisStr.replace(/,/g, ''))
+      : undefined,
+    fechaEmision: fechaEmision || undefined,
+    fechaFirma: fechaFirma || undefined,
+  };
+}
+
 // --- Helpers internos ---
+
+/**
+ * Extrae el texto contenido en un `<span>` por su `id`.
+ * Ejemplo: `<span id="cphMain_lblrncemisor">101010632</span>` → `"101010632"`
+ */
+function extractSpanValue(html: string, spanId: string): string {
+  const idx = html.indexOf(`id="${spanId}"`);
+  if (idx === -1) return '';
+  const tagEnd = html.indexOf('>', idx);
+  if (tagEnd === -1) return '';
+  const closeTag = html.indexOf('</span>', tagEnd);
+  if (closeTag === -1) return '';
+  return decodeHtmlEntities(stripHtmlTags(html.slice(tagEnd + 1, closeTag)));
+}
 
 function extractInputValue(
   html: string,

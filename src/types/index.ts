@@ -33,12 +33,23 @@ export interface Contribuyente {
 
 /**
  * Resultado de validación de un comprobante fiscal contra la DGII.
+ *
+ * Los campos adicionales (`rncComprador`, `codigoSeguridad`, `montoTotal`,
+ * etc.) solo se llenan cuando el comprobante es un e-NCF (serie E).
  */
 export interface NcfQueryResult {
   valid: boolean;
   rnc: string;
   ncf: string;
   nombreComercial?: string;
+  // ── e-NCF (serie E) ──────────────────────────────────────────────
+  rncComprador?: string;
+  codigoSeguridad?: string;
+  estado?: string;
+  montoTotal?: number;
+  totalItbis?: number;
+  fechaEmision?: string;
+  fechaFirma?: string;
 }
 
 /**

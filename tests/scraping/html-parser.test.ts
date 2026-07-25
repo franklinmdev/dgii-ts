@@ -3,6 +3,7 @@ import {
   extractViewStateTokens,
   parseContribuyenteHtml,
   parseNcfHtml,
+  parseEcfHtml,
 } from '../../src/scraping/html-parser.js';
 import { DgiiNotFoundError, DgiiServiceError } from '../../src/errors/index.js';
 
@@ -378,5 +379,103 @@ describe('parseNcfHtml', () => {
     expect(result.rnc).toBe('131098193');
     expect(result.ncf).toBe('B0100000001');
     expect(result.nombreComercial).toBe('EJEMPLO');
+  });
+});
+
+describe('parseEcfHtml', () => {
+  function validEcfHtml(
+    overrides?: Record<string, string>,
+  ): string {
+    const rncEmisor = overrides?.rncEmisor ?? '101010632';
+    const rncComprador = overrides?.rncComprador ?? '131262414';
+    const encf = overrides?.encf ?? 'E310125217173';
+    const codSeg = overrides?.codSeg ?? 'KrOLI0';
+    const estado = overrides?.estado ?? 'Aceptado';
+    const montoTotal = overrides?.montoTotal ?? '230677.74';
+    const totalItbis = overrides?.totalItbis ?? '35188.13';
+    const fechaEmision = overrides?.fechaEmision ?? '2026-02-11';
+    const fechaFirma = overrides?.fechaFirma ?? '2026-02-11';
+
+    return (
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<div id="cphMain_PResultadoFE">' +
+      '<table class="table table-striped detailview">' +
+      '<tr><th>Rnc Emisor</th><td><span id="cphMain_lblrncemisor">' + rncEmisor + '</span></td></tr>' +
+      '<tr><th>Rnc Comprador</th><td><span id="cphMain_lblrnccomprador">' + rncComprador + '</span></td></tr>' +
+      '<tr><th>e-NCF</th><td><span id="cphMain_lblencf">' + encf + '</span></td></tr>' +
+      '<tr><th>C&#243;digo de Seguridad</th><td><span id="cphMain_lblCodSeguridad">' + codSeg + '</span></td></tr>' +
+      '<tr><th>Estado</th><td><span id="cphMain_lblEstadoFe">' + estado + '</span></td></tr>' +
+      '<tr><th>Monto Total</th><td><span id="cphMain_lblMontoTotal">' + montoTotal + '</span></td></tr>' +
+      '<tr><th>Total de ITBIS</th><td><span id="cphMain_lblTotalItbis">' + totalItbis + '</span></td></tr>' +
+      '<tr><th>Fecha Emisi&#243;n</th><td><span id="cphMain_lblFechaEmision">' + fechaEmision + '</span></td></tr>' +
+      '<tr><th>Fecha de Firma</th><td><span id="cphMain_lblFechaFirma">' + fechaFirma + '</span></td></tr>' +
+      '</table></div></body></html>'
+    );
+  }
+
+  it('retorna valid false para e-NCF no válido', () => {
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">El NCF digitado no es v&#225;lido.</span>' +
+      '</body></html>';
+
+    const result = parseEcfHtml(html);
+    expect(result.valid).toBe(false);
+  });
+
+  it('retorna valid false si no hay PResultadoFE', () => {
+    const html = '<html><body></body></html>';
+    const result = parseEcfHtml(html);
+    expect(result.valid).toBe(false);
+  });
+
+  it('parsea e-NCF válido con todos los campos', () => {
+    const result = parseEcfHtml(validEcfHtml());
+    expect(result.valid).toBe(true);
+    expect(result.rnc).toBe('101010632');
+    expect(result.ncf).toBe('E310125217173');
+    expect(result.rncComprador).toBe('131262414');
+    expect(result.codigoSeguridad).toBe('KrOLI0');
+    expect(result.estado).toBe('Aceptado');
+    expect(result.montoTotal).toBe(230677.74);
+    expect(result.totalItbis).toBe(35188.13);
+    expect(result.fechaEmision).toBe('2026-02-11');
+    expect(result.fechaFirma).toBe('2026-02-11');
+  });
+
+  it('strip non-digits del rnc y rncComprador', () => {
+    const html = validEcfHtml({ rncEmisor: '101-01063-2', rncComprador: '131-26241-4' });
+    const result = parseEcfHtml(html);
+    expect(result.rnc).toBe('101010632');
+    expect(result.rncComprador).toBe('131262414');
+  });
+
+  it('retorna campos undefined cuando no están presentes', () => {
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<div id="cphMain_PResultadoFE">' +
+      '<table><tr><th>Rnc Emisor</th><td><span id="cphMain_lblrncemisor">101010632</span></td></tr>' +
+      '<tr><th>e-NCF</th><td><span id="cphMain_lblencf">E310125217173</span></td></tr>' +
+      '</table></div></body></html>';
+
+    const result = parseEcfHtml(html);
+    expect(result.valid).toBe(true);
+    expect(result.rnc).toBe('101010632');
+    expect(result.ncf).toBe('E310125217173');
+    expect(result.rncComprador).toBeUndefined();
+    expect(result.codigoSeguridad).toBeUndefined();
+    expect(result.estado).toBeUndefined();
+    expect(result.montoTotal).toBeUndefined();
+    expect(result.totalItbis).toBeUndefined();
+    expect(result.fechaEmision).toBeUndefined();
+    expect(result.fechaFirma).toBeUndefined();
+  });
+
+  it('parsea montoTotal con formato numérico con comas', () => {
+    const html = validEcfHtml({ montoTotal: '1,230,677.74' });
+    const result = parseEcfHtml(html);
+    expect(result.montoTotal).toBe(1230677.74);
   });
 });

@@ -13,4 +13,7 @@ export const FORM_FIELDS = /*#__PURE__*/ Object.freeze({
   ncfRncInput: 'ctl00$cphMain$txtRNC',
   ncfInput: 'ctl00$cphMain$txtNCF',
   ncfSubmit: 'ctl00$cphMain$btnConsultar',
+  // Campos adicionales para e-NCF (serie E)
+  ncfRncCompradorInput: 'ctl00$cphMain$txtRncComprador',
+  ncfCodigoSeguridadInput: 'ctl00$cphMain$txtCodigoSeg',
 } as const);

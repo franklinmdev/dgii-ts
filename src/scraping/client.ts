@@ -5,6 +5,7 @@ import {
   extractViewStateTokens,
   parseContribuyenteHtml,
   parseNcfHtml,
+  parseEcfHtml,
 } from './html-parser.js';
 import { DgiiServiceError } from '../errors/index.js';
 import { wrapFetchError } from '../utils/fetch-error.js';
@@ -59,9 +60,21 @@ export class ScrapingClient {
   }
 
   /**
-   * Valida un comprobante fiscal (NCF) contra la DGII.
+   * Valida un comprobante fiscal contra la DGII.
+   *
+   * Soporta NCF (serie B) y e-NCF (serie E).
+   *
+   * @param rnc - RNC del emisor
+   * @param ncf - NCF o e-NCF a validar
+   * @param rncComprador - RNC del comprador (solo para e-NCF serie E)
+   * @param codigoSeguridad - Código de seguridad de 6 caracteres (solo para e-NCF serie E)
    */
-  async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
+  async getNCF(
+    rnc: string,
+    ncf: string,
+    rncComprador?: string,
+    codigoSeguridad?: string,
+  ): Promise<NcfQueryResult> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
       throw new DgiiServiceError('El parámetro rnc es requerido');
     }
@@ -69,19 +82,32 @@ export class ScrapingClient {
       throw new DgiiServiceError('El parámetro ncf es requerido');
     }
 
+    const isEcf = ncf.trim().toUpperCase().startsWith('E');
     const tokens = await this._fetchTokens(this._ncfUrl);
 
-    const body = buildFormBody([
+    const fields: Array<[string, string]> = [
       [FORM_FIELDS.viewState, tokens.viewState],
       [FORM_FIELDS.viewStateGenerator, tokens.viewStateGenerator],
       [FORM_FIELDS.eventValidation, tokens.eventValidation],
       [FORM_FIELDS.ncfRncInput, rnc.trim()],
       [FORM_FIELDS.ncfInput, ncf.trim()],
-      [FORM_FIELDS.ncfSubmit, 'Buscar'],
-    ]);
+    ];
 
+    // e-NCF requiere campos adicionales
+    if (isEcf) {
+      if (rncComprador) {
+        fields.push([FORM_FIELDS.ncfRncCompradorInput, rncComprador.trim()]);
+      }
+      if (codigoSeguridad) {
+        fields.push([FORM_FIELDS.ncfCodigoSeguridadInput, codigoSeguridad.trim()]);
+      }
+    }
+
+    fields.push([FORM_FIELDS.ncfSubmit, 'Buscar']);
+
+    const body = buildFormBody(fields);
     const html = await this._post(this._ncfUrl, body);
-    return parseNcfHtml(html);
+    return isEcf ? parseEcfHtml(html) : parseNcfHtml(html);
   }
 
   private async _fetchTokens(url: string) {
