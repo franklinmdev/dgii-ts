@@ -59,16 +59,29 @@ export class DgiiClient {
   }
 
   /**
-   * Valida un comprobante fiscal (NCF) contra la DGII.
+   * Valida un comprobante fiscal contra la DGII.
+   *
+   * @param rnc - RNC del emisor
+   * @param ncf - NCF o e-NCF a validar
+   * @param rncComprador - RNC del comprador (solo e-NCF serie E)
+   * @param codigoSeguridad - Código de seguridad (solo e-NCF serie E)
    */
-  async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
+  async getNCF(
+    rnc: string,
+    ncf: string,
+    rncComprador?: string,
+    codigoSeguridad?: string,
+  ): Promise<NcfQueryResult> {
     return this._executeWithFallback(
-      (client) => client.getNCF(rnc, ncf),
+      (client) => client.getNCF(rnc, ncf, rncComprador, codigoSeguridad),
     );
   }
 
   private async _executeWithFallback<T>(
-    operation: (client: { getContribuyente: ScrapingClient['getContribuyente']; getNCF: ScrapingClient['getNCF'] }) => Promise<T>,
+    operation: (client: {
+      getContribuyente: ScrapingClient['getContribuyente'];
+      getNCF: ScrapingClient['getNCF'];
+    }) => Promise<T>,
   ): Promise<T> {
     const errors: Error[] = [];
 
