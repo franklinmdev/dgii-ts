@@ -165,6 +165,48 @@ describe('DgiiClient', () => {
     expect(result.valid).toBe(true);
   });
 
+  it('getNCF pasa las opciones del e-NCF al ScrapingClient', async () => {
+    const NCF_PAGE =
+      '<html><body>' +
+      '<input type="hidden" name="__VIEWSTATE" value="VS" />' +
+      '<input type="hidden" name="__VIEWSTATEGENERATOR" value="43758EFE" />' +
+      '<input type="hidden" name="__EVENTVALIDATION" value="EV" />' +
+      '</body></html>';
+
+    const ECF_RESULT =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<div id="cphMain_PResultadoFE"><table>' +
+      '<tr><th>Rnc Emisor</th><td><span id="cphMain_lblrncemisor">101010632</span></td></tr>' +
+      '<tr><th>Rnc Comprador</th><td><span id="cphMain_lblrnccomprador">131262414</span></td></tr>' +
+      '<tr><th>e-NCF</th><td><span id="cphMain_lblencf">E310125217173</span></td></tr>' +
+      '<tr><th>Estado</th><td><span id="cphMain_lblEstadoFe">Aceptado</span></td></tr>' +
+      '</table></div></body></html>';
+
+    let postBody: string | undefined;
+    global.fetch = vi.fn().mockImplementation((_url: string, opts?: RequestInit) => {
+      if (opts?.method === 'POST') {
+        postBody = opts.body as string;
+        return Promise.resolve(new Response(ECF_RESULT, { status: 200 }));
+      }
+      return Promise.resolve(new Response(NCF_PAGE, { status: 200 }));
+    });
+
+    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    const result = await client.getNCF('101010632', 'E310125217173', {
+      rncComprador: '131262414',
+      codigoSeguridad: 'KrOLI0',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.estado).toBe('Aceptado');
+    expect(result.rncComprador).toBe('131262414');
+    expect(postBody).toContain('ctl00$cphMain$txtRncComprador=131262414');
+    expect(postBody).toContain('ctl00$cphMain$txtCodigoSeg=KrOLI0');
+    // Solo 2 llamadas (GET page + POST form) -- SOAP nunca llamado
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
   it('se puede instanciar con timeout personalizado', () => {
     const client = new DgiiClient({ timeout: 5000 });
     expect(client).toBeInstanceOf(DgiiClient);

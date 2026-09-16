@@ -424,10 +424,81 @@ describe('parseEcfHtml', () => {
     expect(result.valid).toBe(false);
   });
 
-  it('retorna valid false si no hay PResultadoFE', () => {
-    const html = '<html><body></body></html>';
-    const result = parseEcfHtml(html);
-    expect(result.valid).toBe(false);
+  it('retorna valid false para cada frase conocida de la DGII', () => {
+    const phrases = [
+      'El NCF digitado no es v&#225;lido.',
+      'El comprobante no se encuentra registrado.',
+      'El e-NCF consultado no existe.',
+    ];
+    for (const phrase of phrases) {
+      const html =
+        '<html><body>' +
+        '<span id="cphMain_lblInformacion">' + phrase + '</span>' +
+        '</body></html>';
+      expect(parseEcfHtml(html)).toEqual({ valid: false, rnc: '', ncf: '' });
+    }
+  });
+
+  it('lanza DgiiServiceError con el texto de la DGII si falta el RNC comprador', () => {
+    const message =
+      'Para consultar el estado de esta factura, es necesario completar ' +
+      'el campo RNC Comprador o en su ausencia utilizar el ID extranjero.';
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">' + message + '</span>' +
+      '</body></html>';
+
+    expect(() => parseEcfHtml(html)).toThrow(DgiiServiceError);
+    expect(() => parseEcfHtml(html)).toThrow(message);
+  });
+
+  it('lanza DgiiServiceError para un mensaje desconocido de la DGII', () => {
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">Servicio temporalmente fuera de l&#237;nea.</span>' +
+      '</body></html>';
+
+    expect(() => parseEcfHtml(html)).toThrow(DgiiServiceError);
+    expect(() => parseEcfHtml(html)).toThrow('Servicio temporalmente fuera de línea.');
+  });
+
+  it('lanza DgiiServiceError si no hay mensaje ni PResultadoFE', () => {
+    const html = '<html><body><span id="cphMain_lblInformacion"></span></body></html>';
+    expect(() => parseEcfHtml(html)).toThrow(DgiiServiceError);
+    expect(() => parseEcfHtml(html)).toThrow('Formato de respuesta HTML inesperado');
+  });
+
+  it('lanza DgiiServiceError si el panel no trae emisor ni e-NCF', () => {
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<div id="cphMain_PResultadoFE"><table></table></div>' +
+      '</body></html>';
+    expect(() => parseEcfHtml(html)).toThrow(DgiiServiceError);
+    expect(() => parseEcfHtml(html)).toThrow('Formato de respuesta HTML inesperado');
+  });
+
+  it('mantiene valid true para un estado distinto de Aceptado', () => {
+    const result = parseEcfHtml(validEcfHtml({ estado: 'Rechazado' }));
+    expect(result.valid).toBe(true);
+    expect(result.estado).toBe('Rechazado');
+  });
+
+  it('retorna undefined para montos no numéricos', () => {
+    const result = parseEcfHtml(
+      validEcfHtml({ montoTotal: 'N/A', totalItbis: '--' }),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.montoTotal).toBeUndefined();
+    expect(result.totalItbis).toBeUndefined();
+  });
+
+  it('no lee nombreComercial para la serie E', () => {
+    const html = validEcfHtml().replace(
+      '</table>',
+      '<tr><th>Raz&#243;n Social</th><td><span id="cphMain_lblRazonSocial">X</span></td></tr></table>',
+    );
+    expect(parseEcfHtml(html).nombreComercial).toBeUndefined();
   });
 
   it('parsea e-NCF válido con todos los campos', () => {
