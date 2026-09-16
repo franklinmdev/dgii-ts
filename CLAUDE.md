@@ -44,8 +44,12 @@ tsup with code splitting. `src/index.ts` re-exports everything.
   (`circuit-breaker.ts`) and exponential-backoff retry (`retry.ts`).
 - **`src/scraping/`** — `ScrapingClient` for DGII's ASP.NET WebForms
   pages: extracts ViewState tokens (`endpoints.ts`, `FORM_FIELDS`) and
-  parses response HTML (`html-parser.ts`). Primary live strategy since
-  DGII blocked the SOAP endpoint in January 2025.
+  parses response HTML (`html-parser.ts`). `getNCF` detects an e-NCF
+  with `validateEcf` and sends the buyer fields from `NcfQueryOptions`;
+  `parseEcfHtml` only maps DGII's known "not valid" phrases to
+  `valid: false` and throws `DgiiServiceError` on any other message.
+  Primary live strategy since DGII blocked the SOAP endpoint in
+  January 2025.
 - **`src/soap/`** — `DgiiSoapClient` for the WSMovilDGII SOAP service
   (hand-rolled envelopes in `envelopes.ts`, XML parsing in `xml.ts`).
   Deprecated: DGII blocked this endpoint in January 2025; kept only as

@@ -138,8 +138,41 @@ const result = await client.getContribuyente('131098193');
 
 ```typescript
 const ncfResult = await client.getNCF('131098193', 'B0100000001');
-// { rnc: '131098193', ncf: 'B0100000001', estado: '...', ... }
+// { valid: true, rnc: '131098193', ncf: 'B0100000001', nombreComercial: '...' }
 ```
+
+### Validar e-NCF en línea
+
+Para un e-NCF (serie E) la DGII exige el RNC del comprador. Sin él
+responde con un mensaje de campo requerido y `getNCF` lanza
+`DgiiServiceError`. El código de seguridad es opcional.
+
+```typescript
+const ecfResult = await client.getNCF('101010632', 'E310125217173', {
+  rncComprador: '131262414',
+  codigoSeguridad: 'KrOLI0',
+});
+// {
+//   valid: true,
+//   rnc: '101010632',
+//   ncf: 'E310125217173',
+//   rncComprador: '131262414',
+//   codigoSeguridad: 'KrOLI0',
+//   estado: 'Aceptado',
+//   montoTotal: 230677.74,
+//   totalItbis: 35188.13,
+//   fechaEmision: '2026-02-11',
+//   fechaFirma: '2026-02-11',
+// }
+```
+
+`valid: true` significa que la DGII encontró el comprobante, no que
+esté aceptado: revisa `estado`. Los campos `rncComprador`,
+`codigoSeguridad`, `estado`, `montoTotal`, `totalItbis`,
+`fechaEmision` y `fechaFirma` solo se llenan para la serie E, y
+`nombreComercial` no se llena para esa serie. Las fechas son strings
+tal como la DGII las renderiza. Las opciones se ignoran para un NCF de
+serie B.
 
 ## Referencia del API
 
@@ -158,7 +191,7 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | --- | --- |
 | `DgiiClient` | Cliente con scraping + SOAP fallback, circuit breaker y retry |
 | `client.getContribuyente(rnc)` | Consulta datos de un contribuyente por RNC |
-| `client.getNCF(rnc, ncf)` | Valida un comprobante fiscal contra la DGII |
+| `client.getNCF(rnc, ncf, options?)` | Valida un comprobante fiscal contra la DGII (`options` para e-NCF) |
 
 ### Scraping
 
@@ -166,7 +199,7 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | --- | --- |
 | `ScrapingClient` | Consulta páginas ASP.NET de la DGII |
 | `client.getContribuyente(rnc)` | Consulta contribuyente por RNC |
-| `client.getNCF(rnc, ncf)` | Valida comprobante fiscal |
+| `client.getNCF(rnc, ncf, options?)` | Valida comprobante fiscal (`options` para e-NCF) |
 
 ### Cliente SOAP (deprecated)
 
