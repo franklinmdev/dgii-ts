@@ -3,6 +3,21 @@ import { DgiiNotFoundError, DgiiServiceError } from '../errors/index.js';
 import { collapseSpaces, stripNonDigits } from '../utils/index.js';
 
 /**
+ * Fragmentos de los mensajes con que la DGII indica que un comprobante
+ * no existe o no es válido. Cualquier otro mensaje se trata como error
+ * de servicio para no reportar como inválida una factura real.
+ */
+const NCF_INVALID_PHRASES: readonly string[] = /*#__PURE__*/ Object.freeze([
+  'no es v',
+  'no se encuentra',
+  'no existe',
+]);
+
+function isKnownInvalidMessage(message: string): boolean {
+  return NCF_INVALID_PHRASES.some((phrase) => message.includes(phrase));
+}
+
+/**
  * Resultado de la extracción de tokens ViewState de una página
  * ASP.NET WebForms.
  */
@@ -127,11 +142,7 @@ export function parseNcfHtml(html: string): NcfQueryResult {
     const infoEnd = html.indexOf('</span>', infoStart);
     if (infoEnd !== -1) {
       const infoBlock = html.slice(infoStart, infoEnd);
-      if (
-        infoBlock.includes('no es v') ||
-        infoBlock.includes('no se encuentra') ||
-        infoBlock.includes('no existe')
-      ) {
+      if (isKnownInvalidMessage(infoBlock)) {
         return { valid: false, rnc: '', ncf: '', nombreComercial: undefined };
       }
     }
@@ -184,42 +195,42 @@ export function parseNcfHtml(html: string): NcfQueryResult {
  * La DGII retorna un table con `<th>` y `<span>` dentro de
  * `<div id="cphMain_PResultadoFE">`. Esta función extrae los valores
  * por el `id` de cada `<span>`.
+ *
+ * `valid: true` significa que la DGII encontró el comprobante, sea cual
+ * sea su `estado`.
+ *
+ * @throws {DgiiServiceError} si la DGII responde con un mensaje que no
+ *   es de "no válido" (por ejemplo, un campo requerido) o si el HTML no
+ *   tiene el formato esperado
  */
 export function parseEcfHtml(html: string): NcfQueryResult {
-  // Detectar mensajes de error o "no válido"
-  const infoStart = html.indexOf('cphMain_lblInformacion');
-  if (infoStart !== -1) {
-    const infoEnd = html.indexOf('</span>', infoStart);
-    if (infoEnd !== -1) {
-      const infoBlock = html.slice(infoStart, infoEnd);
-      if (
-        infoBlock.includes('no es v') ||
-        infoBlock.includes('no se encuentra') ||
-        infoBlock.includes('no existe')
-      ) {
-        return { valid: false, rnc: '', ncf: '' };
-      }
-    }
+  const info = extractSpanValue(html, 'cphMain_lblInformacion');
+  if (info && isKnownInvalidMessage(info)) {
+    return { valid: false, rnc: '', ncf: '' };
+  }
+  if (info) {
+    throw new DgiiServiceError(`La DGII respondió: ${info}`);
   }
 
   // El resultado E-series está dentro de <div id="cphMain_PResultadoFE">
   if (!html.includes('cphMain_PResultadoFE')) {
-    return { valid: false, rnc: '', ncf: '' };
+    throw new DgiiServiceError(
+      'Formato de respuesta HTML inesperado: panel de resultado e-NCF no encontrado',
+    );
   }
 
   const rncEmisor = extractSpanValue(html, 'cphMain_lblrncemisor');
   const ncf = extractSpanValue(html, 'cphMain_lblencf');
 
   if (!rncEmisor && !ncf) {
-    return { valid: false, rnc: '', ncf: '' };
+    throw new DgiiServiceError(
+      'Formato de respuesta HTML inesperado: panel e-NCF sin emisor ni e-NCF',
+    );
   }
 
-  const nombreComercial = extractSpanValue(html, 'cphMain_lblRazonSocial');
   const rncComprador = extractSpanValue(html, 'cphMain_lblrnccomprador');
   const codigoSeguridad = extractSpanValue(html, 'cphMain_lblCodSeguridad');
   const estado = extractSpanValue(html, 'cphMain_lblEstadoFe');
-  const montoTotalStr = extractSpanValue(html, 'cphMain_lblMontoTotal');
-  const totalItbisStr = extractSpanValue(html, 'cphMain_lblTotalItbis');
   const fechaEmision = extractSpanValue(html, 'cphMain_lblFechaEmision');
   const fechaFirma = extractSpanValue(html, 'cphMain_lblFechaFirma');
 
@@ -227,26 +238,29 @@ export function parseEcfHtml(html: string): NcfQueryResult {
     valid: true,
     rnc: stripNonDigits(rncEmisor),
     ncf: collapseSpaces(ncf),
-    nombreComercial: nombreComercial
-      ? collapseSpaces(nombreComercial)
-      : undefined,
     rncComprador: rncComprador
       ? stripNonDigits(rncComprador)
       : undefined,
     codigoSeguridad: codigoSeguridad || undefined,
     estado: estado || undefined,
-    montoTotal: montoTotalStr
-      ? parseFloat(montoTotalStr.replace(/,/g, ''))
-      : undefined,
-    totalItbis: totalItbisStr
-      ? parseFloat(totalItbisStr.replace(/,/g, ''))
-      : undefined,
+    montoTotal: parseAmount(extractSpanValue(html, 'cphMain_lblMontoTotal')),
+    totalItbis: parseAmount(extractSpanValue(html, 'cphMain_lblTotalItbis')),
     fechaEmision: fechaEmision || undefined,
     fechaFirma: fechaFirma || undefined,
   };
 }
 
 // --- Helpers internos ---
+
+/**
+ * Convierte un monto como lo renderiza la DGII (`1,230,677.74`) a número.
+ * Retorna `undefined` si está vacío o no es un número finito.
+ */
+function parseAmount(raw: string): number | undefined {
+  if (!raw) return undefined;
+  const value = Number(raw.replace(/,/g, ''));
+  return Number.isFinite(value) ? value : undefined;
+}
 
 /**
  * Extrae el texto contenido en un `<span>` por su `id`.
