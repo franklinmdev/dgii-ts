@@ -429,6 +429,8 @@ describe('parseEcfHtml', () => {
       'El NCF digitado no es v&#225;lido.',
       'El comprobante no se encuentra registrado.',
       'El e-NCF consultado no existe.',
+      // Texto real de la DGII para un código de seguridad incorrecto
+      'No encontrado',
     ];
     for (const phrase of phrases) {
       const html =

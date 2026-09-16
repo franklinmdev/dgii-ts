@@ -381,10 +381,11 @@ describe('ScrapingClient', () => {
     ).rejects.toThrow(/RNC Comprador/);
   });
 
-  it('getNCF retorna valid false para e-NCF inválido', async () => {
+  it('getNCF retorna valid false para código de seguridad incorrecto', async () => {
+    // Texto real de la DGII ante un código de seguridad que no coincide
     const ecfErrorHtml =
       '<html><body>' +
-      '<span id="cphMain_lblInformacion">El NCF digitado no es v&#225;lido.</span>' +
+      '<span id="cphMain_lblInformacion">No encontrado</span>' +
       '</body></html>';
 
     let callCount = 0;

@@ -11,10 +11,13 @@ const NCF_INVALID_PHRASES: readonly string[] = /*#__PURE__*/ Object.freeze([
   'no es v',
   'no se encuentra',
   'no existe',
+  // Respuesta de la DGII a un e-NCF con código de seguridad incorrecto
+  'no encontrado',
 ]);
 
 function isKnownInvalidMessage(message: string): boolean {
-  return NCF_INVALID_PHRASES.some((phrase) => message.includes(phrase));
+  const normalized = message.toLowerCase();
+  return NCF_INVALID_PHRASES.some((phrase) => normalized.includes(phrase));
 }
 
 /**
