@@ -34,6 +34,7 @@ export type {
   ValidationResult,
   NcfValidationResult,
   Contribuyente,
+  NcfQueryOptions,
   NcfQueryResult,
   BulkContribuyente,
 } from './types/index.js';

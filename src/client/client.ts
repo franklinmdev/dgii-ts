@@ -1,4 +1,8 @@
-import type { Contribuyente, NcfQueryResult } from '../types/index.js';
+import type {
+  Contribuyente,
+  NcfQueryOptions,
+  NcfQueryResult,
+} from '../types/index.js';
 import type { ClientOptions } from './types.js';
 import { ScrapingClient } from '../scraping/client.js';
 import { DgiiSoapClient } from '../soap/client.js';
@@ -63,17 +67,16 @@ export class DgiiClient {
    *
    * @param rnc - RNC del emisor
    * @param ncf - NCF o e-NCF a validar
-   * @param rncComprador - RNC del comprador (solo e-NCF serie E)
-   * @param codigoSeguridad - Código de seguridad (solo e-NCF serie E)
+   * @param options - Datos adicionales del e-NCF (`rncComprador`,
+   *   `codigoSeguridad`). Se ignoran cuando `ncf` no es un e-NCF válido.
    */
   async getNCF(
     rnc: string,
     ncf: string,
-    rncComprador?: string,
-    codigoSeguridad?: string,
+    options?: NcfQueryOptions,
   ): Promise<NcfQueryResult> {
     return this._executeWithFallback(
-      (client) => client.getNCF(rnc, ncf, rncComprador, codigoSeguridad),
+      (client) => client.getNCF(rnc, ncf, options),
     );
   }
 
