@@ -135,8 +135,40 @@ const result = await client.getContribuyente('131098193');
 
 ```typescript
 const ncfResult = await client.getNCF('131098193', 'B0100000001');
-// { rnc: '131098193', ncf: 'B0100000001', estado: '...', ... }
+// { valid: true, rnc: '131098193', ncf: 'B0100000001', nombreComercial: '...' }
 ```
+
+### Validate an e-NCF online
+
+For an e-NCF (E-series) DGII requires the buyer's RNC. Without it DGII
+answers with a required-field message and `getNCF` throws
+`DgiiServiceError`. The security code is optional.
+
+```typescript
+const ecfResult = await client.getNCF('101010632', 'E310125217173', {
+  rncComprador: '131262414',
+  codigoSeguridad: 'KrOLI0',
+});
+// {
+//   valid: true,
+//   rnc: '101010632',
+//   ncf: 'E310125217173',
+//   rncComprador: '131262414',
+//   codigoSeguridad: 'KrOLI0',
+//   estado: 'Aceptado',
+//   montoTotal: 230677.74,
+//   totalItbis: 35188.13,
+//   fechaEmision: '2026-02-11',
+//   fechaFirma: '2026-02-11',
+// }
+```
+
+`valid: true` means DGII found the document, not that it is accepted:
+check `estado`. The fields `rncComprador`, `codigoSeguridad`, `estado`,
+`montoTotal`, `totalItbis`, `fechaEmision` and `fechaFirma` are only
+filled for the E-series, and `nombreComercial` is not filled for that
+series. Dates are strings exactly as DGII renders them. The options are
+ignored for a B-series NCF.
 
 ## API reference
 
@@ -155,7 +187,7 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | --- | --- |
 | `DgiiClient` | Scraping + SOAP fallback, circuit breaker, retry |
 | `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
-| `client.getNCF(rnc, ncf)` | Validates a fiscal receipt against DGII |
+| `client.getNCF(rnc, ncf, options?)` | Validates a fiscal receipt against DGII (`options` for e-NCF) |
 
 ### Scraping
 
@@ -163,7 +195,7 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 | --- | --- |
 | `ScrapingClient` | Queries DGII's ASP.NET pages |
 | `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
-| `client.getNCF(rnc, ncf)` | Validates a fiscal receipt |
+| `client.getNCF(rnc, ncf, options?)` | Validates a fiscal receipt (`options` for e-NCF) |
 
 ### SOAP client (deprecated)
 

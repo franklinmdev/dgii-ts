@@ -32,13 +32,46 @@ export interface Contribuyente {
 }
 
 /**
+ * Datos adicionales para consultar un e-NCF (serie E) en la DGII.
+ *
+ * La DGII exige el RNC del comprador (o el ID extranjero) para
+ * responder el estado de un e-NCF. Se ignoran al consultar un NCF
+ * de serie B.
+ */
+export interface NcfQueryOptions {
+  /** RNC del comprador tal como aparece en la factura. */
+  rncComprador?: string;
+  /** Código de seguridad de 6 caracteres impreso en la factura. */
+  codigoSeguridad?: string;
+}
+
+/**
  * Resultado de validación de un comprobante fiscal contra la DGII.
+ *
+ * `valid` significa que la DGII encontró el comprobante, no que esté
+ * aceptado: para un e-NCF hay que revisar `estado` (por ejemplo
+ * `Aceptado`).
+ *
+ * Los campos de la sección e-NCF (`rncComprador`, `codigoSeguridad`,
+ * `estado`, `montoTotal`, `totalItbis`, `fechaEmision`, `fechaFirma`)
+ * solo se llenan cuando el comprobante es un e-NCF (serie E).
+ * `nombreComercial` no se llena para la serie E porque la DGII no lo
+ * muestra en esa consulta. `fechaEmision` y `fechaFirma` son strings
+ * exactamente como la DGII los renderiza.
  */
 export interface NcfQueryResult {
   valid: boolean;
   rnc: string;
   ncf: string;
   nombreComercial?: string;
+  // ── e-NCF (serie E) ──────────────────────────────────────────────
+  rncComprador?: string;
+  codigoSeguridad?: string;
+  estado?: string;
+  montoTotal?: number;
+  totalItbis?: number;
+  fechaEmision?: string;
+  fechaFirma?: string;
 }
 
 /**

@@ -23,6 +23,22 @@ const MOCK_RESULT_HTML =
   '<tr><td style="font-weight:bold;">Estado</td><td>ACTIVO</td></tr>' +
   '</table></body></html>';
 
+const MOCK_ECF_RESULT_HTML =
+  '<html><body>' +
+  '<span id="cphMain_lblInformacion"></span>' +
+  '<div id="cphMain_PResultadoFE">' +
+  '<table class="table table-striped detailview">' +
+  '<tr><th>Rnc Emisor</th><td><span id="cphMain_lblrncemisor">101010632</span></td></tr>' +
+  '<tr><th>Rnc Comprador</th><td><span id="cphMain_lblrnccomprador">131262414</span></td></tr>' +
+  '<tr><th>e-NCF</th><td><span id="cphMain_lblencf">E310125217173</span></td></tr>' +
+  '<tr><th>C&#243;digo de Seguridad</th><td><span id="cphMain_lblCodSeguridad">KrOLI0</span></td></tr>' +
+  '<tr><th>Estado</th><td><span id="cphMain_lblEstadoFe">Aceptado</span></td></tr>' +
+  '<tr><th>Monto Total</th><td><span id="cphMain_lblMontoTotal">230677.74</span></td></tr>' +
+  '<tr><th>Total de ITBIS</th><td><span id="cphMain_lblTotalItbis">35188.13</span></td></tr>' +
+  '<tr><th>Fecha Emisi&#243;n</th><td><span id="cphMain_lblFechaEmision">2026-02-11</span></td></tr>' +
+  '<tr><th>Fecha de Firma</th><td><span id="cphMain_lblFechaFirma">2026-02-11</span></td></tr>' +
+  '</table></div></body></html>';
+
 const MOCK_NOT_FOUND_HTML =
   '<html><body>' +
   '<span id="cphMain_lblInformacion">El RNC/C&#233;dula consultado no se encuentra inscrito como Contribuyente.</span>' +
@@ -206,5 +222,185 @@ describe('ScrapingClient', () => {
     await expect(client.getNCF('131098193', '')).rejects.toThrow(
       DgiiServiceError,
     );
+  });
+
+  // ── e-NCF (serie E) ───────────────────────────────────────────────
+
+  it('getNCF retorna e-NCF válido con todos los campos', async () => {
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation(() => {
+      callCount++;
+      const body = callCount === 1 ? MOCK_PAGE_HTML : MOCK_ECF_RESULT_HTML;
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    const result = await client.getNCF('101010632', 'E310125217173', {
+      rncComprador: '131262414',
+      codigoSeguridad: 'KrOLI0',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.rnc).toBe('101010632');
+    expect(result.ncf).toBe('E310125217173');
+    expect(result.rncComprador).toBe('131262414');
+    expect(result.codigoSeguridad).toBe('KrOLI0');
+    expect(result.estado).toBe('Aceptado');
+    expect(result.montoTotal).toBe(230677.74);
+    expect(result.totalItbis).toBe(35188.13);
+    expect(result.fechaEmision).toBe('2026-02-11');
+    expect(result.fechaFirma).toBe('2026-02-11');
+  });
+
+  it('getNCF envía campos E-series en el POST body', async () => {
+    let callCount = 0;
+    let postBody: string | undefined;
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve(new Response(MOCK_PAGE_HTML, { status: 200 }));
+      }
+      postBody = opts?.body as string;
+      return Promise.resolve(new Response(MOCK_ECF_RESULT_HTML, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    await client.getNCF('101010632', 'E310125217173', {
+      rncComprador: '131262414',
+      codigoSeguridad: 'KrOLI0',
+    });
+
+    expect(postBody).toBeDefined();
+    expect(postBody!).toContain(encodeURIComponent('ctl00$cphMain$txtRncComprador').replace(/%24/g, '$') + '=' + encodeURIComponent('131262414'));
+    expect(postBody!).toContain(encodeURIComponent('ctl00$cphMain$txtCodigoSeg').replace(/%24/g, '$') + '=' + encodeURIComponent('KrOLI0'));
+  });
+
+  it('getNCF omite campos E-series para NCF serie B', async () => {
+    let callCount = 0;
+    let postBody: string | undefined;
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve(new Response(MOCK_PAGE_HTML, { status: 200 }));
+      }
+      postBody = opts?.body as string;
+      return Promise.resolve(new Response(MOCK_RESULT_HTML, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    await client.getNCF('131098193', 'B0100000001');
+
+    expect(postBody).toBeDefined();
+    expect(postBody!).not.toContain('txtRncComprador');
+    expect(postBody!).not.toContain('txtCodigoSeg');
+  });
+
+  it('getNCF ignora las opciones para NCF serie B', async () => {
+    let callCount = 0;
+    let postBody: string | undefined;
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve(new Response(MOCK_PAGE_HTML, { status: 200 }));
+      }
+      postBody = opts?.body as string;
+      return Promise.resolve(new Response(MOCK_RESULT_HTML, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    const result = await client.getNCF('131098193', 'B0100000001', {
+      rncComprador: '131262414',
+      codigoSeguridad: 'KrOLI0',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(postBody).toBeDefined();
+    expect(postBody!).not.toContain('txtRncComprador');
+    expect(postBody!).not.toContain('txtCodigoSeg');
+  });
+
+  it('getNCF no trata como e-NCF un string que solo empieza con E', async () => {
+    let callCount = 0;
+    let postBody: string | undefined;
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve(new Response(MOCK_PAGE_HTML, { status: 200 }));
+      }
+      postBody = opts?.body as string;
+      return Promise.resolve(new Response(MOCK_RESULT_HTML, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    const result = await client.getNCF('131098193', 'EXAMPLE', {
+      rncComprador: '131262414',
+    });
+
+    // Se consulta como serie B: sin campos del comprador y con el parser B
+    expect(result.valid).toBe(true);
+    expect(result.nombreComercial).toBe('EJEMPLO');
+    expect(postBody!).not.toContain('txtRncComprador');
+  });
+
+  it('getNCF lanza DgiiServiceError si rncComprador no es string', async () => {
+    const client = new ScrapingClient();
+    await expect(
+      client.getNCF('101010632', 'E310125217173', {
+        rncComprador: 131262414 as unknown as string,
+      }),
+    ).rejects.toThrow(DgiiServiceError);
+  });
+
+  it('getNCF lanza DgiiServiceError si codigoSeguridad está vacío', async () => {
+    const client = new ScrapingClient();
+    await expect(
+      client.getNCF('101010632', 'E310125217173', {
+        rncComprador: '131262414',
+        codigoSeguridad: '   ',
+      }),
+    ).rejects.toThrow(DgiiServiceError);
+  });
+
+  it('getNCF lanza DgiiServiceError con el texto de la DGII si falta el RNC comprador', async () => {
+    const requiredHtml =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">Para consultar el estado de esta factura, ' +
+      'es necesario completar el campo RNC Comprador o en su ausencia utilizar el ID extranjero.</span>' +
+      '</body></html>';
+
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation(() => {
+      callCount++;
+      const body = callCount === 1 ? MOCK_PAGE_HTML : requiredHtml;
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    await expect(
+      client.getNCF('101010632', 'E310125217173'),
+    ).rejects.toThrow(/RNC Comprador/);
+  });
+
+  it('getNCF retorna valid false para código de seguridad incorrecto', async () => {
+    // Texto real de la DGII ante un código de seguridad que no coincide
+    const ecfErrorHtml =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">No encontrado</span>' +
+      '</body></html>';
+
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation(() => {
+      callCount++;
+      const body = callCount === 1 ? MOCK_PAGE_HTML : ecfErrorHtml;
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    const result = await client.getNCF('101010632', 'E310125217173', {
+      rncComprador: '131262414',
+      codigoSeguridad: 'BAD',
+    });
+
+    expect(result.valid).toBe(false);
   });
 });

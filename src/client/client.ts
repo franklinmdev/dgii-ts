@@ -1,4 +1,8 @@
-import type { Contribuyente, NcfQueryResult } from '../types/index.js';
+import type {
+  Contribuyente,
+  NcfQueryOptions,
+  NcfQueryResult,
+} from '../types/index.js';
 import type { ClientOptions } from './types.js';
 import { ScrapingClient } from '../scraping/client.js';
 import { DgiiSoapClient } from '../soap/client.js';
@@ -59,16 +63,28 @@ export class DgiiClient {
   }
 
   /**
-   * Valida un comprobante fiscal (NCF) contra la DGII.
+   * Valida un comprobante fiscal contra la DGII.
+   *
+   * @param rnc - RNC del emisor
+   * @param ncf - NCF o e-NCF a validar
+   * @param options - Datos adicionales del e-NCF (`rncComprador`,
+   *   `codigoSeguridad`). Se ignoran cuando `ncf` no es un e-NCF válido.
    */
-  async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
+  async getNCF(
+    rnc: string,
+    ncf: string,
+    options?: NcfQueryOptions,
+  ): Promise<NcfQueryResult> {
     return this._executeWithFallback(
-      (client) => client.getNCF(rnc, ncf),
+      (client) => client.getNCF(rnc, ncf, options),
     );
   }
 
   private async _executeWithFallback<T>(
-    operation: (client: { getContribuyente: ScrapingClient['getContribuyente']; getNCF: ScrapingClient['getNCF'] }) => Promise<T>,
+    operation: (client: {
+      getContribuyente: ScrapingClient['getContribuyente'];
+      getNCF: ScrapingClient['getNCF'];
+    }) => Promise<T>,
   ): Promise<T> {
     const errors: Error[] = [];
 

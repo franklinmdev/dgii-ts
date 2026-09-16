@@ -1,12 +1,18 @@
-import type { Contribuyente, NcfQueryResult } from '../types/index.js';
+import type {
+  Contribuyente,
+  NcfQueryOptions,
+  NcfQueryResult,
+} from '../types/index.js';
 import type { ScrapingClientOptions } from './types.js';
 import { DGII_RNC_URL, DGII_NCF_URL, FORM_FIELDS } from './endpoints.js';
 import {
   extractViewStateTokens,
   parseContribuyenteHtml,
   parseNcfHtml,
+  parseEcfHtml,
 } from './html-parser.js';
 import { DgiiServiceError } from '../errors/index.js';
+import { validateEcf } from '../validators/ecf.js';
 import { wrapFetchError } from '../utils/fetch-error.js';
 
 const DEFAULT_USER_AGENT =
@@ -59,29 +65,76 @@ export class ScrapingClient {
   }
 
   /**
-   * Valida un comprobante fiscal (NCF) contra la DGII.
+   * Valida un comprobante fiscal contra la DGII.
+   *
+   * Soporta NCF (serie B) y e-NCF (serie E). Para un e-NCF la DGII
+   * exige el RNC del comprador; sin él responde con un mensaje de campo
+   * requerido y este método lanza `DgiiServiceError`.
+   *
+   * @param rnc - RNC del emisor
+   * @param ncf - NCF o e-NCF a validar
+   * @param options - Datos adicionales del e-NCF (`rncComprador`,
+   *   `codigoSeguridad`). Se ignoran cuando `ncf` no es un e-NCF válido.
    */
-  async getNCF(rnc: string, ncf: string): Promise<NcfQueryResult> {
+  async getNCF(
+    rnc: string,
+    ncf: string,
+    options?: NcfQueryOptions,
+  ): Promise<NcfQueryResult> {
     if (typeof rnc !== 'string' || rnc.trim() === '') {
       throw new DgiiServiceError('El parámetro rnc es requerido');
     }
     if (typeof ncf !== 'string' || ncf.trim() === '') {
       throw new DgiiServiceError('El parámetro ncf es requerido');
     }
+    const rncComprador = options?.rncComprador;
+    if (
+      rncComprador !== undefined &&
+      (typeof rncComprador !== 'string' || rncComprador.trim() === '')
+    ) {
+      throw new DgiiServiceError(
+        'La opción rncComprador debe ser un string no vacío',
+      );
+    }
+    const codigoSeguridad = options?.codigoSeguridad;
+    if (
+      codigoSeguridad !== undefined &&
+      (typeof codigoSeguridad !== 'string' || codigoSeguridad.trim() === '')
+    ) {
+      throw new DgiiServiceError(
+        'La opción codigoSeguridad debe ser un string no vacío',
+      );
+    }
 
+    const isEcf = validateEcf(ncf).valid;
     const tokens = await this._fetchTokens(this._ncfUrl);
 
-    const body = buildFormBody([
+    const fields: Array<[string, string]> = [
       [FORM_FIELDS.viewState, tokens.viewState],
       [FORM_FIELDS.viewStateGenerator, tokens.viewStateGenerator],
       [FORM_FIELDS.eventValidation, tokens.eventValidation],
       [FORM_FIELDS.ncfRncInput, rnc.trim()],
       [FORM_FIELDS.ncfInput, ncf.trim()],
-      [FORM_FIELDS.ncfSubmit, 'Buscar'],
-    ]);
+    ];
 
+    // Solo el e-NCF lleva los campos del comprador; para serie B se ignoran
+    if (isEcf) {
+      if (rncComprador !== undefined) {
+        fields.push([FORM_FIELDS.ncfRncCompradorInput, rncComprador.trim()]);
+      }
+      if (codigoSeguridad !== undefined) {
+        fields.push([
+          FORM_FIELDS.ncfCodigoSeguridadInput,
+          codigoSeguridad.trim(),
+        ]);
+      }
+    }
+
+    fields.push([FORM_FIELDS.ncfSubmit, 'Buscar']);
+
+    const body = buildFormBody(fields);
     const html = await this._post(this._ncfUrl, body);
-    return parseNcfHtml(html);
+    return isEcf ? parseEcfHtml(html) : parseNcfHtml(html);
   }
 
   private async _fetchTokens(url: string) {
