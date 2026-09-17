@@ -69,6 +69,11 @@ export class DgiiClient {
    * @param ncf - NCF o e-NCF a validar
    * @param options - Datos adicionales del e-NCF (`rncComprador`,
    *   `codigoSeguridad`). Se ignoran cuando `ncf` no es un e-NCF válido.
+   *
+   * Para un e-NCF sin `rncComprador` la DGII responde con un mensaje de
+   * campo requerido: `ScrapingClient.getNCF` lanza `DgiiServiceError` y
+   * este método lo envuelve en `AllStrategiesFailedError` tras agotar
+   * reintentos y fallback (el mensaje conserva el texto de la DGII).
    */
   async getNCF(
     rnc: string,
