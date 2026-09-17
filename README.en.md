@@ -141,8 +141,10 @@ const ncfResult = await client.getNCF('131098193', 'B0100000001');
 ### Validate an e-NCF online
 
 For an e-NCF (E-series) DGII requires the buyer's RNC. Without it DGII
-answers with a required-field message and `getNCF` throws
-`DgiiServiceError`. The security code is optional.
+answers with a required-field message: `ScrapingClient.getNCF` throws
+`DgiiServiceError` and `DgiiClient.getNCF` wraps it in
+`AllStrategiesFailedError` after exhausting retries and the fallback
+(the message keeps DGII's text). The security code is optional.
 
 ```typescript
 const ecfResult = await client.getNCF('101010632', 'E310125217173', {

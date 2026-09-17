@@ -91,6 +91,34 @@ describe('ScrapingClient', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
+  it('retorna contribuyente con entidades HTML decodificadas', async () => {
+    const resultHtml =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<table id="cphMain_dvDatosContribuyentes">' +
+      '<tr><td style="font-weight:bold;">Cedula/RNC</td><td>131-82557-5</td></tr>' +
+      '<tr><td style="font-weight:bold;">Nombre/Razon Social</td><td>CABA&#209;AS EOOO EIRL</td></tr>' +
+      '<tr><td style="font-weight:bold;">Nombre Comercial</td><td>CABA&#209;AS EOOO</td></tr>' +
+      '<tr><td style="font-weight:bold;">Estado</td><td>ACTIVO</td></tr>' +
+      '<tr><td style="font-weight:bold;">Actividad Economica</td><td>SERVICIOS DE ALOJAMIENTO POR HORA, MOTELES Y CABA&#209;AS</td></tr>' +
+      '</table></body></html>';
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation(() => {
+      callCount++;
+      const body = callCount === 1 ? MOCK_PAGE_HTML : resultHtml;
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const client = new ScrapingClient();
+    const result = await client.getContribuyente('131825575');
+
+    expect(result.nombre).toBe('CABAÑAS EOOO EIRL');
+    expect(result.nombreComercial).toBe('CABAÑAS EOOO');
+    expect(result.actividadEconomica).toBe(
+      'SERVICIOS DE ALOJAMIENTO POR HORA, MOTELES Y CABAÑAS',
+    );
+  });
+
   it('lanza DgiiNotFoundError para RNC inexistente', async () => {
     let callCount = 0;
     global.fetch = vi.fn().mockImplementation(() => {
