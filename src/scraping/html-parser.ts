@@ -310,14 +310,14 @@ function extractTableFields(tableHtml: string): Map<string, string> {
 
   for (const match of tableHtml.matchAll(BOLD_STYLE_PATTERN)) {
     const label = normalizeLabel(match[1] ?? '');
-    const value = stripHtmlTags(match[2] ?? '');
+    const value = decodeHtmlEntities(stripHtmlTags(match[2] ?? ''));
     if (label) fields.set(label, value);
   }
 
   if (fields.size === 0) {
     for (const match of tableHtml.matchAll(BOLD_TAG_PATTERN)) {
       const label = normalizeLabel(match[1] ?? '');
-      const value = stripHtmlTags(match[2] ?? '');
+      const value = decodeHtmlEntities(stripHtmlTags(match[2] ?? ''));
       if (label) fields.set(label, value);
     }
   }

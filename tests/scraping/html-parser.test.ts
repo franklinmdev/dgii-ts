@@ -180,6 +180,25 @@ describe('parseContribuyenteHtml', () => {
     expect(result.nombre).toBe('TEST');
   });
 
+  it('decodifica entidades HTML en los valores de la tabla', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '131-82557-5'],
+      ['Nombre/Razon Social', 'CABA&#209;AS EOOO EIRL'],
+      ['Nombre Comercial', 'CABA&#209;AS EOOO'],
+      ['Estado', 'ACTIVO'],
+      ['Actividad Economica', 'SERVICIOS DE ALOJAMIENTO POR HORA, MOTELES Y CABA&#209;AS'],
+      ['Administracion Local', 'ADM LOCAL LOS PR&#211;CERES'],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.nombre).toBe('CABAÑAS EOOO EIRL');
+    expect(result.nombreComercial).toBe('CABAÑAS EOOO');
+    expect(result.actividadEconomica).toBe(
+      'SERVICIOS DE ALOJAMIENTO POR HORA, MOTELES Y CABAÑAS',
+    );
+    expect(result.administracionLocal).toBe('ADM LOCAL LOS PRÓCERES');
+  });
+
   it('parsea variante con <b> en vez de font-weight', () => {
     const html =
       '<html><body>' +
@@ -362,6 +381,21 @@ describe('parseNcfHtml', () => {
     expect(result.rnc).toBe('131098193');
     expect(result.ncf).toBe('B0100000005');
     expect(result.nombreComercial).toBe('ALT NAME');
+  });
+
+  it('decodifica entidades HTML en nombreComercial del NCF', () => {
+    const html =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion"></span>' +
+      '<table id="cphMain_dvDatosComprobante">' +
+      '<tr><td style="font-weight:bold;">RNC</td><td>131-82557-5</td></tr>' +
+      '<tr><td style="font-weight:bold;">Nombre Comercial</td><td>CABA&#209;AS EOOO</td></tr>' +
+      '<tr><td style="font-weight:bold;">NCF</td><td>B0100000001</td></tr>' +
+      '</table></body></html>';
+
+    const result = parseNcfHtml(html);
+    expect(result.valid).toBe(true);
+    expect(result.nombreComercial).toBe('CABAÑAS EOOO');
   });
 
   it('retorna valid true con datos del comprobante', () => {
