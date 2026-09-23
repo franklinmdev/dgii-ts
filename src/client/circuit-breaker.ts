@@ -1,4 +1,4 @@
-import { DgiiServiceError } from '../errors/index.js';
+import { DgiiNotFoundError, DgiiServiceError } from '../errors/index.js';
 
 export interface CircuitBreakerOptions {
   /** Fallos consecutivos para abrir el circuito (por defecto: 5) */
@@ -68,7 +68,13 @@ export class ConsecutiveBreaker {
       this._onSuccess();
       return result;
     } catch (error: unknown) {
-      this._onFailure();
+      // DgiiNotFoundError es una respuesta autoritativa de la DGII: el
+      // servicio funciona, así que cuenta como éxito para el circuito
+      if (error instanceof DgiiNotFoundError) {
+        this._onSuccess();
+      } else {
+        this._onFailure();
+      }
       throw error;
     }
   }

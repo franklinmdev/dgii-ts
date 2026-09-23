@@ -114,7 +114,7 @@ export function parseContribuyenteHtml(html: string): Contribuyente {
     rnc: stripNonDigits(rnc),
     nombre: collapseSpaces(nombre),
     nombreComercial: collapseSpaces(nombreComercial),
-    estado: rawEstado.toUpperCase().includes('ACTIVO')
+    estado: collapseSpaces(rawEstado).toUpperCase() === 'ACTIVO'
       ? 'ACTIVO'
       : 'INACTIVO',
     categoria: collapseSpaces(categoria),

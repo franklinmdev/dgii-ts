@@ -43,8 +43,9 @@ pasan validación aunque no cumplan el algoritmo de dígito verificador.
 ### Cliente resiliente (DgiiClient)
 
 `DgiiClient` es el punto de entrada recomendado para consultas en tiempo real.
-Usa web scraping como estrategia primaria con fallback a SOAP, circuit breaker
-para evitar cascadas de errores, y retry con backoff exponencial.
+Usa web scraping con circuit breaker para evitar cascadas de errores y retry
+con backoff exponencial. El fallback a SOAP es opcional (`soapFallback: true`)
+y está apagado por defecto desde la versión 0.3.0.
 
 ### Web scraping
 
@@ -56,7 +57,8 @@ bloqueó el endpoint SOAP en enero 2025.
 
 Wrapper tipado alrededor del servicio SOAP de la DGII. **Bloqueado
 permanentemente por la DGII en enero 2025.** Se mantiene como fallback
-interno pero no se recomienda su uso directo.
+opcional de `DgiiClient` (apagado por defecto) y no se recomienda su uso
+directo.
 
 ### Importador de datos masivos
 
@@ -147,8 +149,8 @@ Para un e-NCF (serie E) la DGII exige el RNC del comprador. Sin él
 responde con un mensaje de campo requerido: `ScrapingClient.getNCF`
 lanza `DgiiServiceError` y `DgiiClient.getNCF` lo envuelve en
 `AllStrategiesFailedError` tras agotar reintentos y fallback (el
-mensaje conserva el texto de la DGII). El código de seguridad es
-opcional.
+mensaje conserva el texto de la DGII). Lo mismo pasa sin el código
+de seguridad: la DGII también lo exige (verificado con un e-NCF E31).
 
 ```typescript
 const ecfResult = await client.getNCF('101010632', 'E310125217173', {
@@ -192,7 +194,7 @@ serie B.
 
 | Clase/Método | Descripción |
 | --- | --- |
-| `DgiiClient` | Cliente con scraping + SOAP fallback, circuit breaker y retry |
+| `DgiiClient` | Cliente con scraping, circuit breaker y retry (SOAP fallback opcional) |
 | `client.getContribuyente(rnc)` | Consulta datos de un contribuyente por RNC |
 | `client.getNCF(rnc, ncf, options?)` | Valida un comprobante fiscal contra la DGII (`options` para e-NCF) |
 
@@ -234,7 +236,7 @@ Acepta `encoding` en las opciones (`latin1` por defecto).
 ├─────────────────────────────────────────────────┤
 │  Capa 2: DgiiClient (resiliente)                │
 │  ✓ Web scraping (primario)                      │
-│  ✓ SOAP fallback  ✓ Circuit breaker  ✓ Retry   │
+│  ✓ Circuit breaker  ✓ Retry                    │
 ├─────────────────────────────────────────────────┤
 │  Capa 3: Datos masivos (DGII_RNC.zip)           │
 │  ✓ Descarga diaria  ✓ Parseo TXT               │
@@ -242,8 +244,8 @@ Acepta `encoding` en las opciones (`latin1` por defecto).
 ```
 
 La **capa 1** es instantánea y funciona sin conexión. La **capa 2** ofrece
-datos en tiempo real con web scraping como estrategia primaria, fallback a
-SOAP, circuit breaker y retry con backoff exponencial. La **capa 3** es
+datos en tiempo real con web scraping, circuit breaker y retry con backoff
+exponencial. La **capa 3** es
 ideal para operaciones en lote donde necesitas buscar miles de RNC rápidamente.
 
 ## Estado del proyecto

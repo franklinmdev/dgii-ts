@@ -23,6 +23,11 @@ const MOCK_RESULT_HTML =
   '<tr><td style="font-weight:bold;">Estado</td><td>ACTIVO</td></tr>' +
   '</table></body></html>';
 
+const NOT_FOUND_HTML =
+  '<html><body>' +
+  '<span id="cphMain_lblInformacion">no se encuentra inscrito</span>' +
+  '</body></html>';
+
 // SOAP XML response
 const MOCK_SOAP_XML =
   '<?xml version="1.0" encoding="utf-8"?>' +
@@ -80,7 +85,7 @@ describe('DgiiClient', () => {
       return Promise.resolve(new Response(MOCK_SOAP_XML, { status: 200 }));
     });
 
-    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    const client = new DgiiClient({ soapFallback: true, retry: { maxRetries: 0 } });
     const result = await client.getContribuyente('131098193');
 
     expect(result.rnc).toBe('131098193');
@@ -100,14 +105,10 @@ describe('DgiiClient', () => {
 
   it('propaga DgiiNotFoundError sin intentar SOAP', async () => {
     let callCount = 0;
-    const notFoundHtml =
-      '<html><body>' +
-      '<span id="cphMain_lblInformacion">no se encuentra inscrito</span>' +
-      '</body></html>';
 
     global.fetch = vi.fn().mockImplementation(() => {
       callCount++;
-      const body = callCount === 1 ? MOCK_PAGE_HTML : notFoundHtml;
+      const body = callCount === 1 ? MOCK_PAGE_HTML : NOT_FOUND_HTML;
       return Promise.resolve(new Response(body, { status: 200 }));
     });
 
@@ -120,20 +121,40 @@ describe('DgiiClient', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('respeta soapFallback: false', async () => {
+  it('varios DgiiNotFoundError seguidos no abren el circuito', async () => {
+
+    global.fetch = vi.fn().mockImplementation(
+      (_url: string, init?: RequestInit) => Promise.resolve(new Response(
+        init?.method === 'POST' ? NOT_FOUND_HTML : MOCK_PAGE_HTML,
+        { status: 200 },
+      )),
+    );
+
+    // Umbral por defecto: 5 fallos consecutivos
+    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    for (let i = 0; i < 6; i++) {
+      await expect(
+        client.getContribuyente('000000000'),
+      ).rejects.toThrow(DgiiNotFoundError);
+    }
+  });
+
+  it.each([
+    ['por defecto', {}],
+    ['con soapFallback: false', { soapFallback: false }],
+  ])('no intenta SOAP %s', async (_caso, options) => {
     global.fetch = vi.fn().mockRejectedValue(
       new TypeError('fetch failed'),
     );
 
-    const client = new DgiiClient({
-      soapFallback: false,
-      retry: { maxRetries: 0 },
-    });
-    await expect(
-      client.getContribuyente('131098193'),
-    ).rejects.toThrow(AllStrategiesFailedError);
+    const client = new DgiiClient({ ...options, retry: { maxRetries: 0 } });
+    const error = await client.getContribuyente('131098193').catch(
+      (e: unknown) => e,
+    );
 
-    // Solo 1 llamada (scraping) -- SOAP nunca intentado
+    expect(error).toBeInstanceOf(AllStrategiesFailedError);
+    expect((error as AllStrategiesFailedError).errors).toHaveLength(1);
+    // Solo el GET del scraping; ninguna llamada al endpoint SOAP
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -238,7 +259,7 @@ describe('DgiiClient', () => {
       return Promise.resolve(new Response(soapNotFound, { status: 200 }));
     });
 
-    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    const client = new DgiiClient({ soapFallback: true, retry: { maxRetries: 0 } });
     await expect(
       client.getContribuyente('000000000'),
     ).rejects.toThrow(DgiiNotFoundError);
@@ -249,7 +270,7 @@ describe('DgiiClient', () => {
       new TypeError('fetch failed'),
     );
 
-    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    const client = new DgiiClient({ soapFallback: true, retry: { maxRetries: 0 } });
 
     try {
       await client.getContribuyente('131098193');

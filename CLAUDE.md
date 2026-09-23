@@ -8,8 +8,8 @@ with code in this repository.
 dgii-ts is a TypeScript library for validating Dominican Republic tax
 identifiers and integrating with the DGII (Dirección General de
 Impuestos Internos). It provides offline validators for RNC, cédula,
-NCF, and e-NCF; a resilient client (web scraping with SOAP fallback,
-circuit breaker, retry); a deprecated SOAP client; and a bulk
+NCF, and e-NCF; a resilient client (web scraping with an opt-in SOAP
+fallback, circuit breaker, retry); a deprecated SOAP client; and a bulk
 DGII_RNC.zip downloader/parser.
 
 ## Commands
@@ -39,8 +39,9 @@ tsup with code splitting. `src/index.ts` re-exports everything.
   Whitelists in `rnc-whitelist.ts` and `cedula-whitelist.ts` bypass
   algorithmic checks for known-valid identifiers.
 - **`src/client/`** — `DgiiClient`, the recommended entry point for
-  live queries. Runs scraping as the primary strategy with SOAP
-  fallback, wrapped in a consecutive-failure circuit breaker
+  live queries. Runs scraping (SOAP fallback only with
+  `soapFallback: true`, off by default), wrapped in a consecutive-failure
+  circuit breaker
   (`circuit-breaker.ts`) and exponential-backoff retry (`retry.ts`).
 - **`src/scraping/`** — `ScrapingClient` for DGII's ASP.NET WebForms
   pages: extracts ViewState tokens (`endpoints.ts`, `FORM_FIELDS`) and
@@ -53,7 +54,7 @@ tsup with code splitting. `src/index.ts` re-exports everything.
 - **`src/soap/`** — `DgiiSoapClient` for the WSMovilDGII SOAP service
   (hand-rolled envelopes in `envelopes.ts`, XML parsing in `xml.ts`).
   Deprecated: DGII blocked this endpoint in January 2025; kept only as
-  the client's internal fallback.
+  the client's opt-in fallback.
 - **`src/bulk/`** — Downloads (`downloader.ts`) and parses
   (`parser.ts`) DGII's daily `DGII_RNC.zip`. The parser maps a fixed
   11-column layout via a named COLUMN index table and throws
