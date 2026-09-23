@@ -147,8 +147,8 @@ Para un e-NCF (serie E) la DGII exige el RNC del comprador. Sin él
 responde con un mensaje de campo requerido: `ScrapingClient.getNCF`
 lanza `DgiiServiceError` y `DgiiClient.getNCF` lo envuelve en
 `AllStrategiesFailedError` tras agotar reintentos y fallback (el
-mensaje conserva el texto de la DGII). El código de seguridad es
-opcional.
+mensaje conserva el texto de la DGII). Lo mismo pasa sin el código
+de seguridad: la DGII también lo exige (verificado con un e-NCF E31).
 
 ```typescript
 const ecfResult = await client.getNCF('101010632', 'E310125217173', {

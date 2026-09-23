@@ -144,7 +144,8 @@ For an e-NCF (E-series) DGII requires the buyer's RNC. Without it DGII
 answers with a required-field message: `ScrapingClient.getNCF` throws
 `DgiiServiceError` and `DgiiClient.getNCF` wraps it in
 `AllStrategiesFailedError` after exhausting retries and the fallback
-(the message keeps DGII's text). The security code is optional.
+(the message keeps DGII's text). The same happens without the
+security code: DGII requires it too (verified with an E31 e-NCF).
 
 ```typescript
 const ecfResult = await client.getNCF('101010632', 'E310125217173', {
