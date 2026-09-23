@@ -90,40 +90,22 @@ describe('parseContribuyenteHtml', () => {
     expect(result.administracionLocal).toBe('ADM LOCAL GGC');
   });
 
-  it('mapea estado Suspendido a INACTIVO', () => {
+  it.each([
+    ['Suspendido', 'INACTIVO'],
+    // No por contener la palabra ACTIVO
+    ['INACTIVO', 'INACTIVO'],
+    // Sin importar mayúsculas ni espacios
+    ['  Activo ', 'ACTIVO'],
+  ])('mapea estado %j a %s', (estado, esperado) => {
     const html = buildResultHtml([
       ['Cedula/RNC', '123456789'],
       ['Nombre/Razon Social', 'TEST'],
       ['Nombre Comercial', ''],
-      ['Estado', 'Suspendido'],
+      ['Estado', estado],
     ]);
 
     const result = parseContribuyenteHtml(html);
-    expect(result.estado).toBe('INACTIVO');
-  });
-
-  it('mapea estado INACTIVO a INACTIVO (no por contener ACTIVO)', () => {
-    const html = buildResultHtml([
-      ['Cedula/RNC', '123456789'],
-      ['Nombre/Razon Social', 'TEST'],
-      ['Nombre Comercial', ''],
-      ['Estado', 'INACTIVO'],
-    ]);
-
-    const result = parseContribuyenteHtml(html);
-    expect(result.estado).toBe('INACTIVO');
-  });
-
-  it('mapea estado Activo sin importar mayúsculas ni espacios', () => {
-    const html = buildResultHtml([
-      ['Cedula/RNC', '123456789'],
-      ['Nombre/Razon Social', 'TEST'],
-      ['Nombre Comercial', ''],
-      ['Estado', '  Activo '],
-    ]);
-
-    const result = parseContribuyenteHtml(html);
-    expect(result.estado).toBe('ACTIVO');
+    expect(result.estado).toBe(esperado);
   });
 
   it('strip dashes del RNC', () => {
