@@ -208,13 +208,25 @@ lookup is two HTTP requests (load the form, submit it).
 
 Node only (it uses `node:https` and `node:fs`).
 
+The library downloads the ZIP but does not unzip it, and it has no zip
+dependency. Extract the single entry `TMP/DGII_RNC.TXT` with the zip tool
+the project already uses, or `adm-zip` (`npm install adm-zip`, plus
+`@types/adm-zip` for TypeScript):
+
 ```ts
+import { writeFile } from 'node:fs/promises';
+import AdmZip from 'adm-zip';
 import { downloadBulkFile, parseBulkFile } from 'dgii-ts/bulk';
 
 const zipPath = await downloadBulkFile({ outputDir: '/var/data/dgii' });
-// zipPath is /var/data/dgii/DGII_RNC.zip; the library does NOT unzip it.
-// Extract the single entry TMP/DGII_RNC.TXT with any zip tool, then:
-const rows = await parseBulkFile({ filePath: '/var/data/dgii/DGII_RNC.TXT' });
+
+const entry = new AdmZip(zipPath).getEntry('TMP/DGII_RNC.TXT');
+if (!entry) throw new Error('DGII_RNC.zip no longer contains TMP/DGII_RNC.TXT');
+const txtPath = '/var/data/dgii/DGII_RNC.TXT';
+await writeFile(txtPath, entry.getData());
+
+const rows = await parseBulkFile({ filePath: txtPath });
+const byRnc = new Map(rows.map((row) => [row.rnc, row]));
 ```
 
 - `downloadBulkFile` writes `<outputDir>/DGII_RNC.zip` (overwriting it) and
@@ -228,6 +240,10 @@ const rows = await parseBulkFile({ filePath: '/var/data/dgii/DGII_RNC.TXT' });
   rows in September 2026, roughly 0.5 GB of memory at peak). Load it in a
   scheduled job and write it to a database or index; do not parse it per
   request.
+- To check a list (suppliers, customers), validate each ID with
+  `validateRnc` **or** `validateCedula` (people appear by cédula), report
+  the ones that fail as bad format rather than "not registered", and look
+  the rest up by their digits.
 - Each row: `rnc` (bare digits: 9 for an RNC, 11 for a cédula), `nombre`,
   `nombreComercial`, `actividad` (DGII truncates it), `estado`, `regimen`,
   `fechaConstitucion` (`dd/mm/yyyy` or empty).
