@@ -102,6 +102,30 @@ describe('parseContribuyenteHtml', () => {
     expect(result.estado).toBe('INACTIVO');
   });
 
+  it('mapea estado INACTIVO a INACTIVO (no por contener ACTIVO)', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '123456789'],
+      ['Nombre/Razon Social', 'TEST'],
+      ['Nombre Comercial', ''],
+      ['Estado', 'INACTIVO'],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.estado).toBe('INACTIVO');
+  });
+
+  it('mapea estado Activo sin importar mayúsculas ni espacios', () => {
+    const html = buildResultHtml([
+      ['Cedula/RNC', '123456789'],
+      ['Nombre/Razon Social', 'TEST'],
+      ['Nombre Comercial', ''],
+      ['Estado', '  Activo '],
+    ]);
+
+    const result = parseContribuyenteHtml(html);
+    expect(result.estado).toBe('ACTIVO');
+  });
+
   it('strip dashes del RNC', () => {
     const html = buildResultHtml([
       ['Cedula/RNC', '401-50625-4'],
