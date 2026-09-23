@@ -17,8 +17,9 @@ import {
 /**
  * Cliente resiliente para consultas a la DGII.
  *
- * Usa web scraping como estrategia principal y SOAP como
- * fallback (con circuit breaker y reintentos automáticos).
+ * Usa web scraping con circuit breaker y reintentos automáticos. El
+ * fallback a SOAP es opcional (`soapFallback: true`) y está apagado por
+ * defecto: la DGII bloqueó ese endpoint en enero 2025.
  */
 export class DgiiClient {
   private readonly _scraping: ScrapingClient;
@@ -50,7 +51,7 @@ export class DgiiClient {
       ...options?.retry,
     };
 
-    this._soapFallback = options?.soapFallback ?? true;
+    this._soapFallback = options?.soapFallback ?? false;
   }
 
   /**

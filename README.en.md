@@ -40,8 +40,9 @@ that pass validation despite failing the check-digit algorithm.
 ### Resilient client (DgiiClient)
 
 `DgiiClient` is the recommended entry point for real-time queries. It uses
-web scraping as its primary strategy with SOAP fallback, a circuit breaker
-to prevent cascading failures, and retry with exponential backoff.
+web scraping with a circuit breaker to prevent cascading failures and retry
+with exponential backoff. The SOAP fallback is opt-in (`soapFallback: true`)
+and off by default since version 0.3.0.
 
 ### Web scraping
 
@@ -52,8 +53,8 @@ endpoint in January 2025.
 ### SOAP client (WSMovilDGII) — deprecated
 
 Typed wrapper around DGII's SOAP service. **Permanently blocked by DGII
-since January 2025.** Kept as an internal fallback but not recommended
-for direct use.
+since January 2025.** Kept as an opt-in `DgiiClient` fallback (off by
+default) and not recommended for direct use.
 
 ### Bulk data importer
 
@@ -188,7 +189,7 @@ ignored for a B-series NCF.
 
 | Class/Method | Description |
 | --- | --- |
-| `DgiiClient` | Scraping + SOAP fallback, circuit breaker, retry |
+| `DgiiClient` | Scraping, circuit breaker, retry (optional SOAP fallback) |
 | `client.getContribuyente(rnc)` | Looks up taxpayer data by RNC |
 | `client.getNCF(rnc, ncf, options?)` | Validates a fiscal receipt against DGII (`options` for e-NCF) |
 
@@ -230,7 +231,7 @@ accepts an `encoding` option (defaults to `latin1`).
 ├─────────────────────────────────────────────────┤
 │  Layer 2: DgiiClient (resilient)                │
 │  ✓ Web scraping (primary)                       │
-│  ✓ SOAP fallback  ✓ Circuit breaker  ✓ Retry   │
+│  ✓ Circuit breaker  ✓ Retry                    │
 ├─────────────────────────────────────────────────┤
 │  Layer 3: Bulk data (DGII_RNC.zip)              │
 │  ✓ Daily download  ✓ TXT parsing                │
@@ -238,8 +239,7 @@ accepts an `encoding` option (defaults to `latin1`).
 ```
 
 **Layer 1** is instant and works offline. **Layer 2** provides real-time data
-using web scraping as the primary strategy, with SOAP fallback, circuit
-breaker, and retry with exponential backoff. **Layer 3** is ideal for batch
+using web scraping, a circuit breaker, and retry with exponential backoff. **Layer 3** is ideal for batch
 operations where you need to look up thousands of RNCs quickly.
 
 ## Project status
