@@ -87,9 +87,12 @@ export const dgii = new DgiiClient({ soapFallback: false });
 
 Retry and circuit-breaker state live inside the instance. A new client per
 request never trips its breaker, so during a DGII outage every request
-keeps hitting DGII. `soapFallback` defaults to `true`, but the SOAP
-service is shut off, so the fallback only adds a wasted request after
-every failed lookup; turn it off.
+keeps hitting DGII. `soapFallback` is `false` by default from dgii-ts
+0.3.0; older versions default to `true`, so pass `false` explicitly. The
+SOAP service is shut off: the fallback only adds a wasted request after
+every failed lookup, and an empty SOAP reply would be reported as
+`DgiiNotFoundError`, making an outage look like "not registered". Do not
+turn it on.
 
 Options and defaults: `timeout` 15000 ms (clamped to 1 to 120 s);
 `retry: { maxRetries: 2, baseDelayMs: 500, maxDelayMs: 10000 }`
