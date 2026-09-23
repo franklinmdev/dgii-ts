@@ -80,7 +80,8 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "scripts": {
     "build": "tsup",

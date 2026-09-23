@@ -79,6 +79,29 @@ pnpm add dgii-ts
 yarn add dgii-ts
 ```
 
+## Skill para agentes de IA
+
+dgii-ts incluye un skill ([`skills/dgii-ts/SKILL.md`](./skills/dgii-ts/SKILL.md))
+que enseña a los agentes de código (Claude Code, Cursor, Codex, Copilot y
+otros compatibles con [Agent Skills](https://agentskills.io)) a usar la
+librería correctamente: qué valida cada validador, cómo manejar los
+errores de `DgiiClient` y cómo no saturar a la DGII.
+
+```bash
+# Cualquier agente compatible
+npx skills add franklinmdev/dgii-ts --skill dgii-ts
+```
+
+En Claude Code también se puede instalar como plugin:
+
+```text
+/plugin marketplace add franklinmdev/dgii-ts
+/plugin install dgii-ts@dgii-ts
+```
+
+El skill viene además dentro del paquete de npm, en
+`node_modules/dgii-ts/skills/`.
+
 ## Uso rápido
 
 ### Validar un RNC

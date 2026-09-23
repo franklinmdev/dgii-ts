@@ -75,6 +75,29 @@ pnpm add dgii-ts
 yarn add dgii-ts
 ```
 
+## Agent skill
+
+dgii-ts ships a skill ([`skills/dgii-ts/SKILL.md`](./skills/dgii-ts/SKILL.md))
+that teaches coding agents (Claude Code, Cursor, Codex, Copilot, and others
+that support [Agent Skills](https://agentskills.io)) to use the library
+correctly: what each validator checks, how to handle `DgiiClient` errors,
+and how to avoid hammering DGII.
+
+```bash
+# Any supported agent
+npx skills add franklinmdev/dgii-ts --skill dgii-ts
+```
+
+In Claude Code you can also install it as a plugin:
+
+```text
+/plugin marketplace add franklinmdev/dgii-ts
+/plugin install dgii-ts@dgii-ts
+```
+
+The skill is also included in the npm package, under
+`node_modules/dgii-ts/skills/`.
+
 ## Quick start
 
 ### Validate an RNC
