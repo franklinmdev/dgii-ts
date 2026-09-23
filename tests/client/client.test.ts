@@ -120,6 +120,28 @@ describe('DgiiClient', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
+  it('varios DgiiNotFoundError seguidos no abren el circuito', async () => {
+    const notFoundHtml =
+      '<html><body>' +
+      '<span id="cphMain_lblInformacion">no se encuentra inscrito</span>' +
+      '</body></html>';
+
+    global.fetch = vi.fn().mockImplementation(
+      (_url: string, init?: RequestInit) => Promise.resolve(new Response(
+        init?.method === 'POST' ? notFoundHtml : MOCK_PAGE_HTML,
+        { status: 200 },
+      )),
+    );
+
+    // Umbral por defecto: 5 fallos consecutivos
+    const client = new DgiiClient({ retry: { maxRetries: 0 } });
+    for (let i = 0; i < 6; i++) {
+      await expect(
+        client.getContribuyente('000000000'),
+      ).rejects.toThrow(DgiiNotFoundError);
+    }
+  });
+
   it('respeta soapFallback: false', async () => {
     global.fetch = vi.fn().mockRejectedValue(
       new TypeError('fetch failed'),
