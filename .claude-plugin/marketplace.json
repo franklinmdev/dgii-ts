@@ -1,0 +1,25 @@
+{
+  "name": "dgii-ts",
+  "owner": {
+    "name": "TheMVProgrammer",
+    "url": "https://github.com/franklinmdev"
+  },
+  "description": "Agent skill for the dgii-ts library: Dominican Republic tax IDs (RNC, cédula, NCF, e-NCF) and DGII lookups.",
+  "plugins": [
+    {
+      "name": "dgii-ts",
+      "source": "./",
+      "strict": false,
+      "description": "Teaches coding agents to validate RNC, cédula, NCF and e-NCF, look up taxpayers and e-NCF status with DgiiClient, and import DGII_RNC.zip using dgii-ts.",
+      "author": {
+        "name": "TheMVProgrammer",
+        "url": "https://github.com/franklinmdev"
+      },
+      "homepage": "https://github.com/franklinmdev/dgii-ts#readme",
+      "repository": "https://github.com/franklinmdev/dgii-ts",
+      "license": "MIT",
+      "keywords": ["dgii", "rnc", "cedula", "ncf", "e-ncf", "dominican-republic"],
+      "skills": ["./skills/dgii-ts"]
+    }
+  ]
+}
